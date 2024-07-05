@@ -1,5 +1,5 @@
 
-import com.makassar.dto.OrderDto
+import com.makassar.dto.ProductMaterialDto
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -7,21 +7,19 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.litote.kmongo.coroutine.CoroutineDatabase
 
-fun Application.ordersRoutes(
-    orderService : OrderService
+fun Application.productMaterialsRoutes(
+    productMaterialService : ProductMaterialService
 ) {
 
     routing {
         
-        post("/orders") {
+        post("/productMaterials") {
             try {
-                val order = call.receive<OrderDto>()
-                if(order.customerId != null){
-                    val id = orderService.createOne(order)
+                val productMaterial = call.receive<ProductMaterialDto>()
+                if(productMaterial.name != null){
+                    val id = productMaterialService.createOne(productMaterial)
                     call.respond(HttpStatusCode.Created, id)
-                }else call.respond(HttpStatusCode.BadRequest,"Customer Id cannot be null")
-
-
+                }else call.respond(HttpStatusCode.BadRequest,"productMaterial must have a name.")
             }
             catch (e : Exception){
                 call.respond(HttpStatusCode.BadRequest,e.toString())
@@ -29,13 +27,13 @@ fun Application.ordersRoutes(
 
         }
 
-        get("/orders/{id}") {
+        get("/productMaterials/{id}") {
 
             try {
                 val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                val order = orderService.getOneById(id)
-                if (order != null) {
-                    call.respond(order)
+                val productMaterial = productMaterialService.getOneById(id)
+                if (productMaterial != null) {
+                    call.respond(productMaterial)
                 }
                 call.respond(HttpStatusCode.NotFound)
 
@@ -46,24 +44,24 @@ fun Application.ordersRoutes(
             }
         }
 
-        get("/orders") {
+        get("/productMaterials") {
             try {
-                val orders = orderService.getAll()
-                if (orders.isEmpty()) {
-                    call.respond("No orders found")
+                val productMaterials = productMaterialService.getAll()
+                if (productMaterials.isEmpty()) {
+                    call.respond("No productMaterials found")
                 }
-                call.respond(HttpStatusCode.OK, orders)
+                call.respond(HttpStatusCode.OK, productMaterials)
             } catch (e : Exception){
                 call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
             }
         }
         
-        put("/orders/{id}") {
+        put("/productMaterials/{id}") {
             try {
                 val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                val order = call.receive<OrderDto>()
-                orderService.updateOneById(id, order).let {
-                    val result =  if(it)  "Successfully modified order with id $id"  else "Order with id $id not found"
+                val productMaterial = call.receive<ProductMaterialDto>()
+                productMaterialService.updateOneById(id, productMaterial).let {
+                    val result =  if(it)  "Successfully modified productMaterial with id $id"  else "productMaterial with id $id not found"
                     call.respond(HttpStatusCode.OK,result)
                 }
             }catch (e : IllegalArgumentException){
@@ -75,11 +73,11 @@ fun Application.ordersRoutes(
 
         }
         
-        delete("/orders/{id}") {
+        delete("/productMaterials/{id}") {
             try {
                 val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                orderService.deleteOneById(id).let {
-                    val result =  if(it)  "Successfully deleted order with id $id"  else "Order with id $id not found"
+                productMaterialService.deleteOneById(id).let {
+                    val result =  if(it)  "Successfully deleted productMaterial with id $id"  else "productMaterial with id $id not found"
                     call.respond(HttpStatusCode.OK, result)
                 }
             }catch (e : IllegalArgumentException){

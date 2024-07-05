@@ -5,10 +5,17 @@ ktor:
     deployment:
         port: 8080
     database:
-        user: "user"
-        password: "password"
-        host: "db_host"
-        port: "db_port"
-        #maxPoolSize: 10
-        db_name: makassar-management-db
+        mongo:
+            user: "mongo-makassar"
+            password: "mongo-makassar-password"
+            host: "localhost"
+            port: "27017"
+            #maxPoolSize: 10
+            dbname: makassar-management-db-dev
 
+
+jwt:
+    secret:  "secret" # should use env variables
+    issuer: "http://0.0.0.0:8080/"
+    audience: "http://0.0.0.0:8080/hello"
+    realm: "Access to 'hello'"
