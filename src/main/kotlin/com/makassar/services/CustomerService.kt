@@ -19,6 +19,7 @@ class CustomerService(private val database: CoroutineDatabase) : CRUDService<Cus
             mail = new.mail,
             country = new.country,
             shippingAddress = new.shippingAddress,
+            createdAt = System.currentTimeMillis(),
         )
 
         customerCollection.insertOne(customer)
@@ -44,6 +45,7 @@ class CustomerService(private val database: CoroutineDatabase) : CRUDService<Cus
                 country = updated.country ?: existingCustomer.country,
                 shippingAddress = updated.shippingAddress ?: existingCustomer.shippingAddress,
                 phone = updated.phone ?: existingCustomer.phone,
+                updatedAt = System.currentTimeMillis(),
             )
             val result = customerCollection.replaceOneById(id, updatedCustomer)
             result.wasAcknowledged()

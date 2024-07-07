@@ -1,25 +1,26 @@
 
-import com.makassar.dto.ProductMaterialDto
-import com.makassar.entities.ProductMaterial
+import com.makassar.dto.ItemMaterialDto
+import com.makassar.entities.ItemMaterial
 import com.makassar.services.CRUDService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
 
-class ProductMaterialService(private val database: CoroutineDatabase) : CRUDService<ProductMaterialDto,ProductMaterial> {
-    private val productMaterialCollection = database.getCollection<ProductMaterial>()
+class ItemMaterialService(private val database: CoroutineDatabase) : CRUDService<ItemMaterialDto,ItemMaterial> {
+    private val productMaterialCollection = database.getCollection<ItemMaterial>()
 
-    override suspend fun createOne(new: ProductMaterialDto): String = withContext(Dispatchers.IO) {
-        val productMaterial = ProductMaterial(
+    override suspend fun createOne(new: ItemMaterialDto): String = withContext(Dispatchers.IO) {
+        val productMaterial = ItemMaterial(
             id = UUID.randomUUID().toString(),
             name = new.name,
-            pricePerUnit= new.pricePerUnit,
-            dimensions = new.dimensions,
+            materialType = new.materialType,
+            color = new.color,
+            measurements = new.measurements,
             surface = new.surface,
             description = new.description,
+            createdAt = System.currentTimeMillis(),
 
         )
 
@@ -27,25 +28,27 @@ class ProductMaterialService(private val database: CoroutineDatabase) : CRUDServ
         productMaterial.id
     }
 
-    override suspend fun getAll(): List<ProductMaterial> = withContext(Dispatchers.IO) {
+    override suspend fun getAll(): List<ItemMaterial> = withContext(Dispatchers.IO) {
         productMaterialCollection.find().toList()
     }
 
 
-    override suspend fun getOneById(id: String): ProductMaterial? = withContext(Dispatchers.IO) {
+    override suspend fun getOneById(id: String): ItemMaterial? = withContext(Dispatchers.IO) {
         val productMaterial = productMaterialCollection.findOneById(id)
         productMaterial
     }
 
-    override suspend fun updateOneById(id: String, updated: ProductMaterialDto): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun updateOneById(id: String, updated: ItemMaterialDto): Boolean = withContext(Dispatchers.IO) {
         val existingProductMaterial = productMaterialCollection.findOneById(id)
         if (existingProductMaterial != null) {
             val updatedProductMaterial = existingProductMaterial.copy(
                 name = updated.name ?: existingProductMaterial.name,
-                pricePerUnit= updated.pricePerUnit ?: existingProductMaterial.pricePerUnit,
-                dimensions = updated.dimensions ?: existingProductMaterial.dimensions,
+                materialType = updated.materialType ?: existingProductMaterial.materialType,
+                color = updated.color ?: existingProductMaterial.color,
+                measurements = updated.measurements ?: existingProductMaterial.measurements,
                 surface = updated.surface ?: existingProductMaterial.surface,
                 description = updated.description?: existingProductMaterial.description,
+                updatedAt = System.currentTimeMillis(),
 
             )
             val result = productMaterialCollection.replaceOneById(id, updatedProductMaterial)

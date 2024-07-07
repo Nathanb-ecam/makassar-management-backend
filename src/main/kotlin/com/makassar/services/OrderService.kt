@@ -4,7 +4,6 @@ import com.makassar.entities.Order
 import com.makassar.services.CRUDService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
@@ -16,11 +15,13 @@ class OrderService(private val database: CoroutineDatabase) : CRUDService<OrderD
         val order = Order(
             id = UUID.randomUUID().toString(),
             customerId = new.customerId,
-            price = new.price,
+            status = new.status,
+            totalPrice = new.totalPrice,
+            deliveryCost = new.deliveryCost,
             discount = new.discount,
-            products = new.products,
-            destination = new.destination,
-            dueDate = new.dueDate
+            bags = new.bags,
+            plannedDate = new.plannedDate,
+            createdAt = System.currentTimeMillis(),
         )
 
         orderCollection.insertOne(order)
@@ -42,11 +43,14 @@ class OrderService(private val database: CoroutineDatabase) : CRUDService<OrderD
         if (existingOrder != null) {
             val updatedOrder = existingOrder.copy(
                 customerId = updated.customerId ?: existingOrder.customerId,
-                price = updated.price ?: existingOrder.price,
+                totalPrice = updated.totalPrice ?: existingOrder.totalPrice,
+                deliveryCost = updated.deliveryCost ?: existingOrder.deliveryCost,
                 discount = updated.discount ?: existingOrder.discount,
-                products = updated.products ?: existingOrder.products,
-                destination = updated.destination ?: existingOrder.destination,
-                dueDate = updated.dueDate ?: existingOrder.dueDate
+                status = updated.status ?: existingOrder.status,
+                bags = updated.bags ?: existingOrder.bags,
+
+                plannedDate = updated.plannedDate ?: existingOrder.plannedDate,
+                updatedAt = System.currentTimeMillis(),
             )
             val result = orderCollection.replaceOneById(id, updatedOrder)
             result.wasAcknowledged()

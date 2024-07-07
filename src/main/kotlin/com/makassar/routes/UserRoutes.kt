@@ -12,7 +12,6 @@ import io.ktor.server.routing.*
 
 
 fun Application.usersRoutes(
-    jwtConfig: JWTConfig,
     userService : UserService
 ) {
 

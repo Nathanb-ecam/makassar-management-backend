@@ -19,7 +19,8 @@ class UserService(private val database: CoroutineDatabase) : CRUDService<UserDto
             username = new.username,
             email = new.email,
             passwordHash = new.password,
-            roles = new.roles
+            roles = new.roles,
+            createdAt = System.currentTimeMillis(),
 
         )
 
@@ -43,7 +44,9 @@ class UserService(private val database: CoroutineDatabase) : CRUDService<UserDto
             val updatedUser = existingUser.copy(
                 username = updated.username ?: existingUser.username,
                 email = updated.email ?: existingUser.email,
-                passwordHash = updated.password ?: existingUser.passwordHash
+                passwordHash = updated.password ?: existingUser.passwordHash,
+                updatedAt = System.currentTimeMillis(),
+
             )
 
             val result = userCollection.replaceOneById(id, updatedUser)

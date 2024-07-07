@@ -11,5 +11,7 @@ data class User(
     val email: String? = null,
     val passwordHash: String? = null,
     val roles : List<String>? = null,
+    val createdAt: Long? = null,
+    val updatedAt: Long? = null,
 )
 

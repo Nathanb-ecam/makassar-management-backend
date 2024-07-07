@@ -52,9 +52,4 @@ class JWTConfig(
 
     }
 
-    fun isAnAdminToken(principal: JWTPrincipal): Boolean{
-        return principal.payload.getClaim("admin")?.asBoolean() ?: false
-    }
-
-
 }

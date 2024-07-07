@@ -4,10 +4,11 @@ package com.makassar
 import AuthService
 import CustomerService
 import OrderService
-import ProductMaterialService
-import ProductService
+import ItemMaterialService
+import BagService
 import UserService
 import com.makassar.auth.JWTConfig
+import com.makassar.plugins.configureCORS
 import com.makassar.storage.DatabaseConfig
 import com.makassar.plugins.configureRouting
 import com.makassar.plugins.configureSecurity
@@ -38,20 +39,21 @@ fun Application.module() {
     configureSerialization()
     configureSecurity(jwtConfig)
     configureRouting()
+    configureCORS()
 
     val mongoDatabase = DatabaseConfig.getDatabase(environment)
 
     val orderService = OrderService(mongoDatabase)
     val customerService = CustomerService(mongoDatabase)
-    val productService = ProductService(mongoDatabase)
-    val productMaterialService = ProductMaterialService(mongoDatabase)
+    val productService = BagService(mongoDatabase)
+    val productMaterialService = ItemMaterialService(mongoDatabase)
     val userService = UserService(mongoDatabase)
     val authService = AuthService(mongoDatabase)
 
 
 
     authRoutes(jwtConfig,authService)
-    usersRoutes(jwtConfig,userService)
+    usersRoutes(userService)
 
     ordersRoutes(orderService)
     customersRoutes(customerService)

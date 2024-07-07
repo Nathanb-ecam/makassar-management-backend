@@ -1,5 +1,5 @@
 
-import com.makassar.dto.CustomerDto
+import com.makassar.dto.BagDto
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -8,20 +8,22 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.litote.kmongo.coroutine.CoroutineDatabase
 
-fun Application.customersRoutes(
-    customerService : CustomerService
+fun Application.bagRoutes(
+    bagService : BagService
 ) {
 
+
+
     routing {
-        authenticate("admin-jwt") {
-            route("/api/customers") {
+        authenticate("admin-jwt"){
+            route("/api/bags"){
                 post {
                     try {
-                        val customer = call.receive<CustomerDto>()
-                        if(customer.name != null){
-                            val newCustomer = customerService.createOne(customer)
-                            call.respond(HttpStatusCode.Created, newCustomer)
-                        }else call.respond(HttpStatusCode.BadRequest,"Customer must have a name.")
+                        val bag = call.receive<BagDto>()
+                        if(bag.marketingName != null){
+                            val id = bagService.createOne(bag)
+                            call.respond(HttpStatusCode.Created, id)
+                        }else call.respond(HttpStatusCode.BadRequest,"bag must have a name.")
                     }
                     catch (e : Exception){
                         call.respond(HttpStatusCode.BadRequest,e.toString())
@@ -33,9 +35,9 @@ fun Application.customersRoutes(
 
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val customer = customerService.getOneById(id)
-                        if (customer != null) {
-                            call.respond(customer)
+                        val bag = bagService.getOneById(id)
+                        if (bag != null) {
+                            call.respond(bag)
                         }
                         call.respond(HttpStatusCode.NotFound)
 
@@ -48,11 +50,11 @@ fun Application.customersRoutes(
 
                 get {
                     try {
-                        val customers = customerService.getAll()
-                        if (customers.isEmpty()) {
-                            call.respond("No customers found")
+                        val bag = bagService.getAll()
+                        if (bag.isEmpty()) {
+                            call.respond("No bag found")
                         }
-                        call.respond(HttpStatusCode.OK, customers)
+                        call.respond(HttpStatusCode.OK, bag)
                     } catch (e : Exception){
                         call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
                     }
@@ -61,9 +63,9 @@ fun Application.customersRoutes(
                 put("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val customer = call.receive<CustomerDto>()
-                        customerService.updateOneById(id, customer).let {
-                            val result =  if(it)  "Successfully modified customer with id $id"  else "Customer with id $id not found"
+                        val bag = call.receive<BagDto>()
+                        bagService.updateOneById(id, bag).let {
+                            val result =  if(it)  "Successfully modified bag with id $id"  else "bag with id $id not found"
                             call.respond(HttpStatusCode.OK,result)
                         }
                     }catch (e : IllegalArgumentException){
@@ -78,8 +80,8 @@ fun Application.customersRoutes(
                 delete("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        customerService.deleteOneById(id).let {
-                            val result =  if(it)  "Successfully deleted customer with id $id"  else "Customer with id $id not found"
+                        bagService.deleteOneById(id).let {
+                            val result =  if(it)  "Successfully deleted bag with id $id"  else "bag with id $id not found"
                             call.respond(HttpStatusCode.OK, result)
                         }
                     }catch (e : IllegalArgumentException){
@@ -92,7 +94,6 @@ fun Application.customersRoutes(
             }
         }
 
-        
 
     }
 }

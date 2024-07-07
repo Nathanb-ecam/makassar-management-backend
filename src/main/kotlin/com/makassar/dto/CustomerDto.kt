@@ -8,6 +8,6 @@ data class CustomerDto(
     val name: String? = null,
     val mail: String? = null,
     val phone: String? = null,
-    val country: String? = null,
+    val shippingCountry: String? = null,
     val shippingAddress: String? = null,
 )
