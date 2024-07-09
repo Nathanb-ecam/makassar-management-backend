@@ -1,5 +1,6 @@
 package com.makassar.entities
 
+
 import kotlinx.serialization.Serializable
 import org.bson.codecs.pojo.annotations.BsonId
 import java.util.*
@@ -15,7 +16,7 @@ import java.util.*
  */
 
 @Serializable
-data class ItemMaterial(
+data class BagPartMaterial(
     @BsonId val id: String = UUID.randomUUID().toString(),
     val name: String? = null,
     val materialType: String? = null,
@@ -23,8 +24,8 @@ data class ItemMaterial(
     val measurements: String? = null,
     val surface: String? = null,
     val description: String? = null,
-    val resellers: List<String>? = null, // list of Ids of the sellers of the material
+    val resellers: Set<String>? = null, // list of Ids of the sellers of the material
     val createdAt: Long? = null,
     val updatedAt: Long? = null,
 
-)
+    )

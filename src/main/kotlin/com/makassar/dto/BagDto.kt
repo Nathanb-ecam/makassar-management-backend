@@ -9,6 +9,8 @@ data class BagDto(
     val retailPrice: String? = null,
     val description: String? = null,
     val sku: String? = null,
+    val colors: List<String>? = null,
+
 
     val handles: Map<String,String>? = null,
     val bodies: Map<String,String>? = null,

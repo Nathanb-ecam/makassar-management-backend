@@ -1,5 +1,4 @@
 
-import com.makassar.dto.BagDto
 import com.makassar.dto.BagPartDto
 import com.makassar.utils.FileUploadProcessing
 import io.ktor.http.*
@@ -11,42 +10,39 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import org.litote.kmongo.coroutine.CoroutineDatabase
-import java.io.File
-import java.util.*
 
-fun Application.bagRoutes(
-    bagService : BagService
+fun Application.bagSubPartRoutes(
+    bagPartService : BagPartService
 ) {
 
     val allowedFileTypesString = environment.config.tryGetString("allowedUploadFileTypes") ?: "png,jpg,jpeg"
 
     routing {
         authenticate("admin-jwt"){
-            route("/api/bags"){
+            route("/api/bag-parts"){
+
                 post{
                     try{
-                        val bagPart = call.receive<BagDto>()
-                        if(bagPart.marketingName == null) return@post call.respond(HttpStatusCode.BadRequest,"Bag requires property 'marketingName'")
+                        val bagPart = call.receive<BagPartDto>()
+                        if(bagPart.family == null) return@post call.respond(HttpStatusCode.BadRequest,"Bag part requires property 'family'")
 
-                        val id = bagService.createOne(bagPart)
-                        call.respond(HttpStatusCode.OK, mapOf("bagId" to id))
+                        val id = bagPartService.createOne(bagPart)
+                        call.respond(HttpStatusCode.OK, mapOf("bagPartId" to id))
                     }catch (e: Exception){
                         call.respond(HttpStatusCode.BadRequest,e.toString())
                     }
                 }
 
-
                 post("/with-images"){
                     val multipart = call.receiveMultipart()
-                    var bagDto: BagDto? = null
+                    var bagSubPartDto: BagPartDto? = null
                     val fileParts = mutableListOf<PartData.FileItem>()
 
                     multipart.forEachPart { part ->
                         when (part) {
                             is PartData.FormItem -> {
                                 if(part.name =="data"){
-                                    bagDto = Json.decodeFromString<BagDto>(part.value)
+                                    bagSubPartDto = Json.decodeFromString<BagPartDto>(part.value)
                                 }
                             }
                             is PartData.FileItem -> {
@@ -59,33 +55,34 @@ fun Application.bagRoutes(
                         part.dispose()
                     }
 
-                    if (bagDto == null) return@post call.respond(HttpStatusCode.BadRequest, "Bag information were not provided")
+                    if (bagSubPartDto == null) return@post call.respond(HttpStatusCode.BadRequest, "Bag information were not provided")
 
-                    if(bagDto!!.marketingName == null){
-                        return@post call.respond(HttpStatusCode.BadRequest, "Bag requires property 'marketingName'")
+                    if(bagSubPartDto!!.family == null){
+                        return@post call.respond(HttpStatusCode.BadRequest, "BagSubPart requires property 'family'")
                     }
 
-                    val fileUploadResult = FileUploadProcessing.handleFileUploads("bags",fileParts,allowedFileTypesString)
+                    val fileUploadResult = FileUploadProcessing.handleFileUploads("bags-subparts",fileParts,allowedFileTypesString)
                     val uploadedImagesUrls = fileUploadResult["imageUrls"]?.toList()
 
 
-                    bagDto = bagDto!!.copy(
+                    bagSubPartDto = bagSubPartDto!!.copy(
                         imageUrls =  uploadedImagesUrls,
                     )
 
-                    val id = bagService.createOne(bagDto!!)
-                    if(fileUploadResult["fileExtensionNotAllowed"]!!.isNotEmpty()) call.respond(HttpStatusCode.Created, mapOf( "bagId" to id, "errors" to "File extensions not allowed : ${fileUploadResult["fileExtensionNotAllowed"]}"))
-                    else call.respond(HttpStatusCode.Created, mapOf("bagId" to id))
-
+                    val id = bagPartService.createOne(bagSubPartDto!!)
+                    if(fileUploadResult["fileExtensionNotAllowed"]!!.isNotEmpty()) call.respond(HttpStatusCode.Created, mapOf( "bagSubPartId" to id, "errors" to "File extensions not allowed : ${fileUploadResult["fileExtensionNotAllowed"]}"))
+                    else call.respond(HttpStatusCode.Created, mapOf("bagSubPartId" to id))
                 }
+
+
 
                 get("{id}") {
 
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val bag = bagService.getOneById(id)
-                        if (bag != null) {
-                            call.respond(bag)
+                        val bagPart = bagPartService.getOneById(id)
+                        if (bagPart != null) {
+                            call.respond(bagPart)
                         }
                         call.respond(HttpStatusCode.NotFound)
 
@@ -98,11 +95,11 @@ fun Application.bagRoutes(
 
                 get {
                     try {
-                        val bag = bagService.getAll()
-                        if (bag.isEmpty()) {
-                            call.respond("No bag found")
+                        val BagPart = bagPartService.getAll()
+                        if (BagPart.isEmpty()) {
+                            call.respond("No BagPart found")
                         }
-                        call.respond(HttpStatusCode.OK, bag)
+                        call.respond(HttpStatusCode.OK, BagPart)
                     } catch (e : Exception){
                         call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
                     }
@@ -111,9 +108,9 @@ fun Application.bagRoutes(
                 put("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val bag = call.receive<BagDto>()
-                        bagService.updateOneById(id, bag).let {
-                            val result =  if(it)  "Successfully modified bag with id $id"  else "bag with id $id not found"
+                        val BagPart = call.receive<BagPartDto>()
+                        bagPartService.updateOneById(id, BagPart).let {
+                            val result =  if(it)  "Successfully modified BagPart with id $id"  else "BagPart with id $id not found"
                             call.respond(HttpStatusCode.OK,result)
                         }
                     }catch (e : IllegalArgumentException){
@@ -128,8 +125,8 @@ fun Application.bagRoutes(
                 delete("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        bagService.deleteOneById(id).let {
-                            val result =  if(it)  "Successfully deleted bag with id $id"  else "bag with id $id not found"
+                        bagPartService.deleteOneById(id).let {
+                            val result =  if(it)  "Successfully deleted BagPart with id $id"  else "BagPart with id $id not found"
                             call.respond(HttpStatusCode.OK, result)
                         }
                     }catch (e : IllegalArgumentException){

@@ -1,14 +1,16 @@
 
 import com.makassar.dto.BagDto
 import com.makassar.entities.Bag
-import com.makassar.services.CRUDService
+import com.makassar.services.GenericService
+import com.makassar.utils.ServiceUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
 
-class BagService(private val database: CoroutineDatabase) : CRUDService<BagDto,Bag> {
+class BagService(private val database: CoroutineDatabase) : GenericService<BagDto,Bag> {
     private val bagCollection = database.getCollection<Bag>()
 
     override suspend fun createOne(new: BagDto): String = withContext(Dispatchers.IO) {
@@ -24,7 +26,8 @@ class BagService(private val database: CoroutineDatabase) : CRUDService<BagDto,B
             liners = new.liners,
             screws = new.screws,
             others = new.others,
-            materials = new.materials,
+            //materials needs to be computed by taking all the materials used for creating the sub bagItems
+            //materials = new.materials,
             imageUrls = new.imageUrls,
             description = new.description,
             createdAt = System.currentTimeMillis(),
@@ -41,8 +44,8 @@ class BagService(private val database: CoroutineDatabase) : CRUDService<BagDto,B
 
 
     override suspend fun getOneById(id: String): Bag? = withContext(Dispatchers.IO) {
-        val Bag = bagCollection.findOneById(id)
-        Bag
+        val bag = bagCollection.findOneById(id)
+        bag
     }
 
     override suspend fun updateOneById(id: String, updated: BagDto): Boolean = withContext(Dispatchers.IO) {
@@ -52,15 +55,17 @@ class BagService(private val database: CoroutineDatabase) : CRUDService<BagDto,B
                 marketingName = updated.marketingName ?: existingBag.marketingName,
                 sku = updated.sku?: existingBag.sku,
                 retailPrice = updated.retailPrice ?: existingBag.retailPrice,
-                handles = updated.handles,
-                bodies = updated.bodies,
-                shoulderStraps = updated.shoulderStraps,
-                figures = updated.figures,
-                liners = updated.liners,
-                screws = updated.screws,
-                others = updated.others,
+                colors = updated.colors ?: existingBag.colors,
+
+                handles = ServiceUtils.mergeMapsByReplacingQuantity(existingBag.handles,updated.handles),
+                bodies = ServiceUtils.mergeMapsByReplacingQuantity(existingBag.bodies,updated.bodies),
+                shoulderStraps = ServiceUtils.mergeMapsByReplacingQuantity(existingBag.shoulderStraps,updated.shoulderStraps),
+                figures = ServiceUtils.mergeMapsByReplacingQuantity(existingBag.figures,updated.figures),
+                liners = ServiceUtils.mergeMapsByReplacingQuantity(existingBag.liners,updated.liners),
+                screws = ServiceUtils.mergeMapsByReplacingQuantity(existingBag.screws,updated.screws),
+                others = ServiceUtils.mergeMapsByReplacingQuantity(existingBag.others,updated.others),
                 
-                materials = updated.materials?: existingBag.materials,
+                //materials = updated.materials?: existingBag.materials,
                 imageUrls = updated.imageUrls?: existingBag.imageUrls,
                 description = updated.description?: existingBag.description,
                 updatedAt = System.currentTimeMillis(),

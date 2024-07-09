@@ -1,5 +1,6 @@
 package com.makassar.entities
 
+
 import kotlinx.serialization.Serializable
 import org.bson.codecs.pojo.annotations.BsonId
 import java.util.*
@@ -12,6 +13,7 @@ import java.util.*
  * @property marketingName The name of the bag to be showed to customers.
  * @property retailPrice Retail price of the bag.
  * @property sku Reference number of the bag.
+ * @property colors The visible colors of the bag for the final users, ordered from principal to the least present color on the item.
 
  Links to other items.
 
@@ -35,6 +37,7 @@ data class Bag(
     val marketingName: String? = null,
     val retailPrice: String? = null,
     val sku : String? = null,
+    val colors: List<String>? = null,
 
     val handles: Map<String,String>? = null,
     val bodies: Map<String,String>? = null,

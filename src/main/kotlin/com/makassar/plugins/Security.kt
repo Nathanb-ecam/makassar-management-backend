@@ -6,15 +6,17 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.config.*
 import io.ktor.server.response.*
+import org.slf4j.LoggerFactory
 
 
 fun Application.configureSecurity(jwtConfig: JWTConfig) {
-
-
     install(Authentication) {
         val basicClaims = listOf("userIdentifier")
         val adminClaims = listOf("admin")
+
+
 
         jwt("basic-jwt") {
 
@@ -30,9 +32,6 @@ fun Application.configureSecurity(jwtConfig: JWTConfig) {
             }
         }
 
-
-
-
         jwt("admin-jwt") {
             realm = jwtConfig.realm
             verifier(jwtConfig.verifier())
@@ -42,10 +41,12 @@ fun Application.configureSecurity(jwtConfig: JWTConfig) {
             }
 
             challenge { defaultScheme, realm ->
-                call.respond(HttpStatusCode.Unauthorized, "ADMIN Token is not valid or has expired")
+                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
             }
         }
 
     }
 
 }
+
+

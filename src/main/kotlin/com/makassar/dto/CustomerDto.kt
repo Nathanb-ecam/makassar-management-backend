@@ -10,4 +10,5 @@ data class CustomerDto(
     val phone: String? = null,
     val shippingCountry: String? = null,
     val shippingAddress: String? = null,
+    val type:String? = null
 )

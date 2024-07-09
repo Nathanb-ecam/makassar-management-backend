@@ -2,11 +2,18 @@ package com.makassar
 
 
 import AuthService
+import BagPartService
 import CustomerService
 import OrderService
-import ItemMaterialService
+import BagPartMaterialService
 import BagService
+import ColorService
+import MaterialTypeService
 import UserService
+import bagPartMaterialRoutes
+import bagRoutes
+import bagSubPartRoutes
+import colorRoutes
 import com.makassar.auth.JWTConfig
 import com.makassar.plugins.configureCORS
 import com.makassar.storage.DatabaseConfig
@@ -18,10 +25,9 @@ import customersRoutes
 
 import io.ktor.server.application.*
 import io.ktor.server.config.*
-import io.ktor.server.routing.*
+import materialTypeRoutes
+
 import ordersRoutes
-import productMaterialsRoutes
-import productRoutes
 import usersRoutes
 
 fun main(args: Array<String>) {
@@ -45,8 +51,12 @@ fun Application.module() {
 
     val orderService = OrderService(mongoDatabase)
     val customerService = CustomerService(mongoDatabase)
-    val productService = BagService(mongoDatabase)
-    val productMaterialService = ItemMaterialService(mongoDatabase)
+    val bagService = BagService(mongoDatabase)
+    val bagItemService = BagPartService(mongoDatabase)
+    val bagPartMaterialService = BagPartMaterialService(mongoDatabase)
+    val materialTypeService = MaterialTypeService(mongoDatabase)
+    val colorService = ColorService(mongoDatabase)
+
     val userService = UserService(mongoDatabase)
     val authService = AuthService(mongoDatabase)
 
@@ -57,8 +67,11 @@ fun Application.module() {
 
     ordersRoutes(orderService)
     customersRoutes(customerService)
-    productRoutes(productService)
-    productMaterialsRoutes(productMaterialService)
+    bagRoutes(bagService)
+    bagSubPartRoutes(bagItemService)
+    bagPartMaterialRoutes(bagPartMaterialService)
+    materialTypeRoutes(materialTypeService)
+    colorRoutes(colorService)
 
 
 }

@@ -1,29 +1,26 @@
 
-import com.makassar.dto.BagItemDto
+import com.makassar.dto.BagPartMaterialDto
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.litote.kmongo.coroutine.CoroutineDatabase
 
-fun Application.bagItemRoutes(
-    bagItemService : BagItemService
+fun Application.bagPartMaterialRoutes(
+    itemMaterialService : BagPartMaterialService
 ) {
 
-
-
     routing {
-        authenticate("admin-jwt"){
-            route("/api/bag-items"){
+        authenticate("admin-jwt") {
+            route("/api/bag-part-materials") {
                 post {
                     try {
-                        val BagItem = call.receive<BagItemDto>()
-                        if(BagItem.marketingName != null){
-                            val id = bagItemService.createOne(BagItem)
+                        val itemMaterial = call.receive<BagPartMaterialDto>()
+                        if(itemMaterial.materialType != null){
+                            val id = itemMaterialService.createOne(itemMaterial)
                             call.respond(HttpStatusCode.Created, id)
-                        }else call.respond(HttpStatusCode.BadRequest,"BagItem must have a name.")
+                        }else call.respond(HttpStatusCode.BadRequest,"itemMaterial must have a materialType.")
                     }
                     catch (e : Exception){
                         call.respond(HttpStatusCode.BadRequest,e.toString())
@@ -35,9 +32,9 @@ fun Application.bagItemRoutes(
 
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val BagItem = bagItemService.getOneById(id)
-                        if (BagItem != null) {
-                            call.respond(BagItem)
+                        val itemMaterial = itemMaterialService.getOneById(id)
+                        if (itemMaterial != null) {
+                            call.respond(itemMaterial)
                         }
                         call.respond(HttpStatusCode.NotFound)
 
@@ -50,11 +47,11 @@ fun Application.bagItemRoutes(
 
                 get {
                     try {
-                        val BagItem = bagItemService.getAll()
-                        if (BagItem.isEmpty()) {
-                            call.respond("No BagItem found")
+                        val itemMaterials = itemMaterialService.getAll()
+                        if (itemMaterials.isEmpty()) {
+                            call.respond("No itemMaterials found")
                         }
-                        call.respond(HttpStatusCode.OK, BagItem)
+                        call.respond(HttpStatusCode.OK, itemMaterials)
                     } catch (e : Exception){
                         call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
                     }
@@ -63,9 +60,9 @@ fun Application.bagItemRoutes(
                 put("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val BagItem = call.receive<BagItemDto>()
-                        bagItemService.updateOneById(id, BagItem).let {
-                            val result =  if(it)  "Successfully modified BagItem with id $id"  else "BagItem with id $id not found"
+                        val itemMaterial = call.receive<BagPartMaterialDto>()
+                        itemMaterialService.updateOneById(id, itemMaterial).let {
+                            val result =  if(it)  "Successfully modified itemMaterial with id $id"  else "itemMaterial with id $id not found"
                             call.respond(HttpStatusCode.OK,result)
                         }
                     }catch (e : IllegalArgumentException){
@@ -80,8 +77,8 @@ fun Application.bagItemRoutes(
                 delete("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        bagItemService.deleteOneById(id).let {
-                            val result =  if(it)  "Successfully deleted BagItem with id $id"  else "BagItem with id $id not found"
+                        itemMaterialService.deleteOneById(id).let {
+                            val result =  if(it)  "Successfully deleted itemMaterial with id $id"  else "itemMaterial with id $id not found"
                             call.respond(HttpStatusCode.OK, result)
                         }
                     }catch (e : IllegalArgumentException){

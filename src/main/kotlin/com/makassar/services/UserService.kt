@@ -1,23 +1,23 @@
 
 import com.makassar.dto.UserDto
 import com.makassar.entities.User
-import com.makassar.services.CRUDService
+import com.makassar.services.GenericService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
 
-class UserService(private val database: CoroutineDatabase) : CRUDService<UserDto,User> {
+class UserService(private val database: CoroutineDatabase) : GenericService<UserDto,User> {
     private val userCollection = database.getCollection<User>()
 
     override suspend fun createOne(new: UserDto): String = withContext(Dispatchers.IO) {
 
         val user = User(
-
             id = UUID.randomUUID().toString(),
             username = new.username,
-            email = new.email,
+            mail = new.mail,
             passwordHash = new.password,
             roles = new.roles,
             createdAt = System.currentTimeMillis(),
@@ -43,7 +43,7 @@ class UserService(private val database: CoroutineDatabase) : CRUDService<UserDto
         if (existingUser != null) {
             val updatedUser = existingUser.copy(
                 username = updated.username ?: existingUser.username,
-                email = updated.email ?: existingUser.email,
+                mail = updated.mail ?: existingUser.mail,
                 passwordHash = updated.password ?: existingUser.passwordHash,
                 updatedAt = System.currentTimeMillis(),
 

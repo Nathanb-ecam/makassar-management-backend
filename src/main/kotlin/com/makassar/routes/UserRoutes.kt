@@ -22,10 +22,10 @@ fun Application.usersRoutes(
                 post {
                     try {
                         val user = call.receive<UserDto>()
-                        if(user.username != null){
+                        if(user.mail != null){
                             val id = userService.createOne(user)
                             call.respond(HttpStatusCode.Created, id)
-                        }else call.respond(HttpStatusCode.BadRequest,"User must have a name.")
+                        }else call.respond(HttpStatusCode.BadRequest,"User must have an email.")
                     }
                     catch (e : Exception){
                         call.respond(HttpStatusCode.BadRequest,e.toString())

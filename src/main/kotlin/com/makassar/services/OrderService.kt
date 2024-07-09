@@ -1,14 +1,15 @@
 
 import com.makassar.dto.OrderDto
 import com.makassar.entities.Order
-import com.makassar.services.CRUDService
+import com.makassar.services.GenericService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
 
-class OrderService(private val database: CoroutineDatabase) : CRUDService<OrderDto,Order> {
+class OrderService(private val database: CoroutineDatabase) : GenericService<OrderDto,Order> {
     private val orderCollection = database.getCollection<Order>()
 
     override suspend fun createOne(new: OrderDto): String = withContext(Dispatchers.IO) {

@@ -1,6 +1,10 @@
 package com.makassar.services
 
-interface CRUDService<dtoType,returnType> {
+import org.bson.types.ObjectId
+import java.security.Provider
+import java.util.*
+
+interface GenericService<dtoType,returnType> {
     suspend fun getAll(): List<returnType>
 
     suspend fun getOneById(id: String): returnType?
@@ -11,5 +15,4 @@ interface CRUDService<dtoType,returnType> {
 
     suspend fun deleteOneById(id: String): Boolean
 }
-
 

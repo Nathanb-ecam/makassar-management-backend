@@ -1,18 +1,19 @@
 
-import com.makassar.dto.BagItemDto
-import com.makassar.entities.BagItem
-import com.makassar.services.CRUDService
+import com.makassar.dto.BagPartDto
+import com.makassar.entities.BagPart
+import com.makassar.services.GenericService
+import com.makassar.utils.ServiceUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
 
-class BagItemService(private val database: CoroutineDatabase) : CRUDService<BagItemDto,BagItem> {
-    private val bagItemCollection = database.getCollection<BagItem>()
+class BagPartService(private val database: CoroutineDatabase) : GenericService<BagPartDto,BagPart> {
+    private val bagPartsCollection = database.getCollection<BagPart>()
 
-    override suspend fun createOne(new: BagItemDto): String = withContext(Dispatchers.IO) {
-        val bagItem = BagItem(
+    override suspend fun createOne(new: BagPartDto): String = withContext(Dispatchers.IO) {
+        val bagItem = BagPart(
             id = UUID.randomUUID().toString(),
             marketingName = new.marketingName,
             singleItemPrice = new.singleItemPrice,
@@ -28,22 +29,22 @@ class BagItemService(private val database: CoroutineDatabase) : CRUDService<BagI
 
         )
 
-        bagItemCollection.insertOne(bagItem)
+        bagPartsCollection.insertOne(bagItem)
         bagItem.id
     }
 
-    override suspend fun getAll(): List<BagItem> = withContext(Dispatchers.IO) {
-        bagItemCollection.find().toList()
+    override suspend fun getAll(): List<BagPart> = withContext(Dispatchers.IO) {
+        bagPartsCollection.find().toList()
     }
 
 
-    override suspend fun getOneById(id: String): BagItem? = withContext(Dispatchers.IO) {
-        val bagItem = bagItemCollection.findOneById(id)
+    override suspend fun getOneById(id: String): BagPart? = withContext(Dispatchers.IO) {
+        val bagItem = bagPartsCollection.findOneById(id)
         bagItem
     }
 
-    override suspend fun updateOneById(id: String, updated: BagItemDto): Boolean = withContext(Dispatchers.IO) {
-        val existingBagItem = bagItemCollection.findOneById(id)
+    override suspend fun updateOneById(id: String, updated: BagPartDto): Boolean = withContext(Dispatchers.IO) {
+        val existingBagItem = bagPartsCollection.findOneById(id)
 
         if (existingBagItem != null) {
             val updatedBagItem = existingBagItem.copy(
@@ -54,21 +55,22 @@ class BagItemService(private val database: CoroutineDatabase) : CRUDService<BagI
                 colors = updated.colors ?: existingBagItem.colors,
                 measurements = updated.measurements ?: existingBagItem.measurements,
                 size = updated.size ?: existingBagItem.size,
-                materials = updated.materials?: existingBagItem.materials,
+                materials = ServiceUtils.mergeMapsByReplacingQuantity(existingBagItem.materials,updated.materials),
                 imageUrls = updated.imageUrls?: existingBagItem.imageUrls,
                 description = updated.description?: existingBagItem.description,
                 updatedAt = System.currentTimeMillis(),
 
             )
-            val result = bagItemCollection.replaceOneById(id, updatedBagItem)
+            val result = bagPartsCollection.replaceOneById(id, updatedBagItem)
             result.wasAcknowledged()
         } else {
             false
         }
     }
 
+
     override suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {
-        val result = bagItemCollection.deleteOneById(id)
+        val result = bagPartsCollection.deleteOneById(id)
         result.wasAcknowledged()
     }
 

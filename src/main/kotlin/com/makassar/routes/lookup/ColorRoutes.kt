@@ -1,26 +1,29 @@
 
-import com.makassar.dto.ItemMaterialDto
+
+import com.makassar.dto.lookup.ColorDto
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.json.Json
+import org.litote.kmongo.coroutine.CoroutineDatabase
 
-fun Application.itemMaterialRoutes(
-    itemMaterialService : ItemMaterialService
+fun Application.colorRoutes(
+    colorService : ColorService
 ) {
 
     routing {
-        authenticate("admin-jwt") {
-            route("/api/item-materials") {
+        authenticate("admin-jwt"){
+            route("/api/colors"){
                 post {
                     try {
-                        val itemMaterial = call.receive<ItemMaterialDto>()
-                        if(itemMaterial.name != null){
-                            val id = itemMaterialService.createOne(itemMaterial)
+                        val color = call.receive<ColorDto>()
+                        if(color.name != null){
+                            val id = colorService.createOne(color)
                             call.respond(HttpStatusCode.Created, id)
-                        }else call.respond(HttpStatusCode.BadRequest,"itemMaterial must have a name.")
+                        }else call.respond(HttpStatusCode.BadRequest,"color must have a name.")
                     }
                     catch (e : Exception){
                         call.respond(HttpStatusCode.BadRequest,e.toString())
@@ -32,9 +35,9 @@ fun Application.itemMaterialRoutes(
 
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val itemMaterial = itemMaterialService.getOneById(id)
-                        if (itemMaterial != null) {
-                            call.respond(itemMaterial)
+                        val color = colorService.getOneById(id)
+                        if (color != null) {
+                            call.respond(color)
                         }
                         call.respond(HttpStatusCode.NotFound)
 
@@ -47,11 +50,11 @@ fun Application.itemMaterialRoutes(
 
                 get {
                     try {
-                        val itemMaterials = itemMaterialService.getAll()
-                        if (itemMaterials.isEmpty()) {
-                            call.respond("No itemMaterials found")
+                        val color = colorService.getAll()
+                        if (color.isEmpty()) {
+                            call.respond("No color found")
                         }
-                        call.respond(HttpStatusCode.OK, itemMaterials)
+                        call.respond(HttpStatusCode.OK, color)
                     } catch (e : Exception){
                         call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
                     }
@@ -60,9 +63,9 @@ fun Application.itemMaterialRoutes(
                 put("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val itemMaterial = call.receive<ItemMaterialDto>()
-                        itemMaterialService.updateOneById(id, itemMaterial).let {
-                            val result =  if(it)  "Successfully modified itemMaterial with id $id"  else "itemMaterial with id $id not found"
+                        val color = call.receive<ColorDto>()
+                        colorService.updateOneById(id, color).let {
+                            val result =  if(it)  "Successfully modified color with id $id"  else "color with id $id not found"
                             call.respond(HttpStatusCode.OK,result)
                         }
                     }catch (e : IllegalArgumentException){
@@ -77,8 +80,8 @@ fun Application.itemMaterialRoutes(
                 delete("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        itemMaterialService.deleteOneById(id).let {
-                            val result =  if(it)  "Successfully deleted itemMaterial with id $id"  else "itemMaterial with id $id not found"
+                        colorService.deleteOneById(id).let {
+                            val result =  if(it)  "Successfully deleted color with id $id"  else "color with id $id not found"
                             call.respond(HttpStatusCode.OK, result)
                         }
                     }catch (e : IllegalArgumentException){

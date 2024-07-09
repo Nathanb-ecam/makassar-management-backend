@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class ItemMaterialDto(
+data class BagPartMaterialDto(
     val name: String? = null,
     val materialType: String? = null,
     val color: String? = null,
@@ -14,5 +14,5 @@ data class ItemMaterialDto(
     val surface: String? = null,
 
     val description: String? = null,
-    val resellers: List<String>? = null,
+    val resellers: Set<String>? = null,
 )

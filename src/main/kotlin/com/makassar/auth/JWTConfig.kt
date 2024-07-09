@@ -21,6 +21,7 @@ class JWTConfig(
         val token = JWT.create()
             .withAudience(audience)
             .withIssuer(issuer)
+
             //.withClaim("userIdentifier", matchedUser.email)
             .withExpiresAt(Date(System.currentTimeMillis() + durationMillis))
 

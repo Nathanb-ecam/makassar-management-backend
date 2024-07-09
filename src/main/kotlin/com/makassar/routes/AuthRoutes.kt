@@ -22,11 +22,12 @@ fun Application.authRoutes(
 
 
             if(matchedUser.roles != null && matchedUser.roles.contains("admin")) {
-                val adminClaims = mapOf("userIdentifier" to user.email,"admin" to "true")
-                val token = jwtConfig.generateToken(adminClaims,180_000)
+                val adminClaims = mapOf("userIdentifier" to user.mail,"admin" to "true")
+                /*val token = jwtConfig.generateToken(adminClaims,180_000)*/
+                val token = jwtConfig.generateToken(adminClaims,3600_000)
                 return@post call.respond(hashMapOf("admin token" to token))
             }else{
-                val basicClaims = mapOf("userIdentifier" to user.email)
+                val basicClaims = mapOf("userIdentifier" to user.mail)
                 val token = jwtConfig.generateToken(basicClaims,3600_000)
                 return@post call.respond(hashMapOf("basic token" to token))
             }

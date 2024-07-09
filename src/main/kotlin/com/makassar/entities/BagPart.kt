@@ -15,7 +15,7 @@ import java.util.*
  * @property family Family to which the item belongs. A belong item can belong to a "shouldersStrap, handles, bodies,liners,etc".
  *
  *
- * @property colors List of colors present on the item, from principal to the least present color on the item.
+ * @property colors List of colors present on the item, ordered from principal to the least present color on the item.
  * @property measurements Measures of the item. Required string format: "Length:Width:Height". Distance should be provided in cm.
  * @property size Size of the item. Can be S (small), M (medium sized), L (large), etc.
 
@@ -26,7 +26,7 @@ import java.util.*
 
 
 @Serializable
-data class BagItem(
+data class BagPart(
     @BsonId val id: String = UUID.randomUUID().toString(),
     val marketingName: String? = null,
     val singleItemPrice: String? = null,

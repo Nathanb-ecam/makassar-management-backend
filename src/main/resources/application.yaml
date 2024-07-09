@@ -12,6 +12,12 @@ ktor:
             port: "27017"
             #maxPoolSize: 10
             dbname: makassar-management-db-dev
+    appConfig:
+
+    environment:
+        allowedUploadFileTypes: "png,jpeg,jpg"
+
+
 
 
 jwt:

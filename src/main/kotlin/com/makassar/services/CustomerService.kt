@@ -1,14 +1,15 @@
 
 import com.makassar.dto.CustomerDto
 import com.makassar.entities.Customer
-import com.makassar.services.CRUDService
+import com.makassar.services.GenericService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
 
-class CustomerService(private val database: CoroutineDatabase) : CRUDService<CustomerDto,Customer> {
+class CustomerService(private val database: CoroutineDatabase) : GenericService<CustomerDto,Customer> {
     private val customerCollection = database.getCollection<Customer>()
 
     override suspend fun createOne(new: CustomerDto): String = withContext(Dispatchers.IO) {
@@ -17,7 +18,9 @@ class CustomerService(private val database: CoroutineDatabase) : CRUDService<Cus
             id = UUID.randomUUID().toString(),
             name = new.name,
             mail = new.mail,
-            country = new.country,
+            phone = new.phone,
+            type = new.type ?: "Professional",
+            shippingCountry = new.shippingCountry,
             shippingAddress = new.shippingAddress,
             createdAt = System.currentTimeMillis(),
         )
@@ -42,8 +45,9 @@ class CustomerService(private val database: CoroutineDatabase) : CRUDService<Cus
             val updatedCustomer = existingCustomer.copy(
                 name = updated.name ?: existingCustomer.name,
                 mail = updated.mail ?: existingCustomer.mail,
-                country = updated.country ?: existingCustomer.country,
+                shippingCountry = updated.shippingCountry ?: existingCustomer.shippingCountry,
                 shippingAddress = updated.shippingAddress ?: existingCustomer.shippingAddress,
+                type = updated.type ?: existingCustomer.type,
                 phone = updated.phone ?: existingCustomer.phone,
                 updatedAt = System.currentTimeMillis(),
             )
