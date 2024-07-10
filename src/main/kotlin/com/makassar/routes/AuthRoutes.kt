@@ -25,11 +25,11 @@ fun Application.authRoutes(
                 val adminClaims = mapOf("userIdentifier" to user.mail,"admin" to "true")
                 /*val token = jwtConfig.generateToken(adminClaims,180_000)*/
                 val token = jwtConfig.generateToken(adminClaims,3600_000)
-                return@post call.respond(hashMapOf("admin token" to token))
+                return@post call.respond(hashMapOf("token" to token))
             }else{
                 val basicClaims = mapOf("userIdentifier" to user.mail)
                 val token = jwtConfig.generateToken(basicClaims,3600_000)
-                return@post call.respond(hashMapOf("basic token" to token))
+                return@post call.respond(hashMapOf("token" to token))
             }
 
 
