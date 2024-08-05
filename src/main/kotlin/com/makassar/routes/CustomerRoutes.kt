@@ -13,14 +13,14 @@ fun Application.customersRoutes(
 ) {
 
     routing {
-        authenticate("admin-jwt") {
+        authenticate("access-jwt") {
             route("/api/customers") {
                 post {
                     try {
                         val customer = call.receive<CustomerDto>()
                         if(customer.name != null){
                             val newCustomer = customerService.createOne(customer)
-                            call.respond(HttpStatusCode.Created, newCustomer)
+                            call.respond(HttpStatusCode.Created, mapOf("customerId" to newCustomer))
                         }else call.respond(HttpStatusCode.BadRequest,"Customer must have a name.")
                     }
                     catch (e : Exception){

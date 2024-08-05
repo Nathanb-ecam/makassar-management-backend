@@ -13,37 +13,37 @@ import org.slf4j.LoggerFactory
 
 fun Application.configureSecurity(jwtConfig: JWTConfig) {
     install(Authentication) {
-        val basicClaims = listOf("userIdentifier")
-        val adminClaims = listOf("admin")
+        val typeClaims = listOf("type")
 
 
 
-        jwt("basic-jwt") {
+
+        jwt("access-jwt") {
 
             realm = jwtConfig.realm
-            verifier(jwtConfig.verifier())
+            verifier(jwtConfig.verifier(mapOf("type" to "access")))
 
             validate { credential ->
-                jwtConfig.validateCredentials(credential,basicClaims)
+                jwtConfig.validateCredentials(credential,typeClaims)
             }
 
             challenge { defaultScheme, realm ->
-                call.respond(HttpStatusCode.Unauthorized, "BASIC Token is not valid or has expired")
+                call.respond(HttpStatusCode.Unauthorized, "accessToken is not valid or has expired")
             }
         }
 
-        jwt("admin-jwt") {
+/*        jwt("refresh-jwt") {
             realm = jwtConfig.realm
-            verifier(jwtConfig.verifier())
+            verifier(jwtConfig.verifier(mapOf("type" to "refresh")))
 
             validate { credential ->
-                jwtConfig.validateCredentials(credential,adminClaims)
+                jwtConfig.validateCredentials(credential,typeClaims)
             }
 
             challenge { defaultScheme, realm ->
-                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+                call.respond(HttpStatusCode.Unauthorized, "refreshToken is not valid or has expired")
             }
-        }
+        }*/
 
     }
 

@@ -9,6 +9,7 @@ data class CustomerDto(
     val mail: String? = null,
     val phone: String? = null,
     val shippingCountry: String? = null,
+    val shippingPostalCode: String? = null,
     val shippingAddress: String? = null,
     val type:String? = null
 )

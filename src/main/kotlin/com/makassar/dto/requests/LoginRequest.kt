@@ -1,4 +1,4 @@
-package com.makassar.auth
+package com.makassar.dto.requests
 
 import kotlinx.serialization.Serializable
 

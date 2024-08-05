@@ -15,7 +15,7 @@ fun Application.colorRoutes(
 ) {
 
     routing {
-        authenticate("admin-jwt"){
+        authenticate("access-jwt"){
             route("/api/colors"){
                 post {
                     try {

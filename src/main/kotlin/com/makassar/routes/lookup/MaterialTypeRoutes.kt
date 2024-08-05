@@ -16,7 +16,7 @@ fun Application.materialTypeRoutes(
 
 
     routing {
-        authenticate("admin-jwt"){
+        authenticate("access-jwt"){
             route("/api/material-types"){
                 post {
                     try {

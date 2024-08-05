@@ -2,7 +2,7 @@ package com.makassar.routes
 
 import AuthService
 import com.makassar.auth.JWTConfig
-import com.makassar.auth.LoginRequest
+import com.makassar.dto.requests.LoginRequest
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -12,8 +12,11 @@ import io.ktor.server.routing.*
 
 fun Application.authRoutes(
     jwtConfig: JWTConfig,
-    authService: AuthService
+    authService: AuthService,
+    accessTokenLifeTime : Long,
+    refreshTokenLifeTime : Long,
 ){
+
 
     routing {
         post("/api/login") {
@@ -21,18 +24,47 @@ fun Application.authRoutes(
             val matchedUser = authService.loginWithMail(user) ?: return@post call.respond(HttpStatusCode.Unauthorized)
 
 
-            if(matchedUser.roles != null && matchedUser.roles.contains("admin")) {
-                val adminClaims = mapOf("userIdentifier" to user.mail,"admin" to "true")
-                /*val token = jwtConfig.generateToken(adminClaims,180_000)*/
-                val token = jwtConfig.generateToken(adminClaims,3600_000)
-                return@post call.respond(hashMapOf("token" to token))
-            }else{
-                val basicClaims = mapOf("userIdentifier" to user.mail)
-                val token = jwtConfig.generateToken(basicClaims,3600_000)
-                return@post call.respond(hashMapOf("token" to token))
-            }
+            val accessToken = jwtConfig.generateToken(mapOf("type" to "access" ),accessTokenLifeTime)
+            val refreshToken = jwtConfig.generateToken(mapOf("type" to "refresh" ),refreshTokenLifeTime)
+
+            call.response.cookies.append(
+                Cookie(
+                    name = "refreshToken",
+                    value = refreshToken,
+                    httpOnly = true,
+                    secure = true,
+                    path = "/",
+                    maxAge = refreshTokenLifeTime.toInt()
+                )
+            )
+
+            return@post call.respond(hashMapOf("accessToken" to accessToken))
+
 
 
         }
+/*        authenticate("refresh-jwt"){
+            get("/api/refresh-token") {
+
+
+                val claims = mapOf("type" to "access")
+                val newAccessToken = jwtConfig.generateToken(claims, 180_000)
+                    call.respond(mapOf("accessToken" to newAccessToken))
+                }
+            }*/
+        get("/api/refresh-token") {
+
+            val refreshToken = call.request.cookies["refreshToken"]
+                ?: return@get call.respond(HttpStatusCode.Unauthorized, "Refresh token cookie missing")
+
+            val valid = jwtConfig.verifyRefreshToken(refreshToken) ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid refresh token")
+
+            val claims = mapOf("type" to "access")
+            val newAccessToken = jwtConfig.generateToken(claims, accessTokenLifeTime)
+            call.respond(mapOf("accessToken" to newAccessToken))
+
+        }
     }
+
+
 }

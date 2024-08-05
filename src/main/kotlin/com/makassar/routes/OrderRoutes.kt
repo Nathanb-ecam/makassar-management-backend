@@ -13,14 +13,14 @@ fun Application.ordersRoutes(
 ) {
 
     routing {
-        authenticate("admin-jwt") {
+        authenticate("access-jwt") {
             route("/api/orders"){
                 post {
                     try {
                         val order = call.receive<OrderDto>()
                         if(order.customerId != null){
                             val id = orderService.createOne(order)
-                            call.respond(HttpStatusCode.Created, id)
+                            call.respond(HttpStatusCode.Created, mapOf("orderId" to id) )
                         }else call.respond(HttpStatusCode.BadRequest,"Customer Id cannot be null")
 
 

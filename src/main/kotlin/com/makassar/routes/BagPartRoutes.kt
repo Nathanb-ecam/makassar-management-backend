@@ -18,7 +18,7 @@ fun Application.bagSubPartRoutes(
     val allowedFileTypesString = environment.config.tryGetString("allowedUploadFileTypes") ?: "png,jpg,jpeg"
 
     routing {
-        authenticate("admin-jwt"){
+        authenticate("access-jwt"){
             route("/api/bag-parts"){
 
                 post{
@@ -33,7 +33,7 @@ fun Application.bagSubPartRoutes(
                     }
                 }
 
-                post("/with-images"){
+                post("/withImages"){
                     val multipart = call.receiveMultipart()
                     var bagSubPartDto: BagPartDto? = null
                     val fileParts = mutableListOf<PartData.FileItem>()

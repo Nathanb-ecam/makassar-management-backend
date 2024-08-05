@@ -25,3 +25,7 @@ jwt:
     issuer: "http://0.0.0.0:8080/"
     audience: "http://0.0.0.0:8080/hello"
     realm: "Access to 'hello'"
+    accessToken:
+        lifetime: 600000000
+    refreshToken:
+        lifetime: 300000000

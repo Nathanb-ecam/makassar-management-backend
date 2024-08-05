@@ -1,6 +1,6 @@
 
 import com.makassar.dto.BagDto
-import com.makassar.dto.BagPartDto
+import com.makassar.dto.requests.IdsRequest
 import com.makassar.utils.FileUploadProcessing
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -11,18 +11,16 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import org.litote.kmongo.coroutine.CoroutineDatabase
-import java.io.File
-import java.util.*
+import org.slf4j.LoggerFactory
 
 fun Application.bagRoutes(
     bagService : BagService
 ) {
 
     val allowedFileTypesString = environment.config.tryGetString("allowedUploadFileTypes") ?: "png,jpg,jpeg"
-
+    val logger = LoggerFactory.getLogger("BagRoutes")
     routing {
-        authenticate("admin-jwt"){
+        authenticate("access-jwt"){
             route("/api/bags"){
                 post{
                     try{
@@ -37,7 +35,7 @@ fun Application.bagRoutes(
                 }
 
 
-                post("/with-images"){
+                post("/withImages"){
                     val multipart = call.receiveMultipart()
                     var bagDto: BagDto? = null
                     val fileParts = mutableListOf<PartData.FileItem>()
@@ -54,7 +52,7 @@ fun Application.bagRoutes(
                                     fileParts.add(part)
                                 }
                             }
-                            else -> {}
+                            else -> {logger.debug("Unhandled part ${part.name}")}
                         }
                         part.dispose()
                     }
@@ -96,7 +94,7 @@ fun Application.bagRoutes(
                     }
                 }
 
-                get {
+            get {
                     try {
                         val bag = bagService.getAll()
                         if (bag.isEmpty()) {
@@ -107,6 +105,20 @@ fun Application.bagRoutes(
                         call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
                     }
                 }
+
+                post("/withIds"){
+                    try {
+                        val bagIds = call.receive<IdsRequest>()
+                        val bags = bagService.getAllByIds(bagIds.ids)
+                        if (bags.isEmpty()) {
+                            call.respond("No bag found for those ids")
+                        }
+                        call.respond(HttpStatusCode.OK, bags)
+                    } catch (e : Exception){
+                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
+                    }
+                }
+
 
                 put("{id}") {
                     try {

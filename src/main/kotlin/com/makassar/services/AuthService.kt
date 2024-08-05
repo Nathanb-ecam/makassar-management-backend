@@ -1,6 +1,5 @@
 
-import com.makassar.auth.LoginRequest
-import com.makassar.dto.UserDto
+import com.makassar.dto.requests.LoginRequest
 import com.makassar.entities.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -12,7 +12,7 @@ fun Application.bagPartMaterialRoutes(
 ) {
 
     routing {
-        authenticate("admin-jwt") {
+        authenticate("access-jwt") {
             route("/api/bag-part-materials") {
                 post {
                     try {

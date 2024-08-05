@@ -17,7 +17,7 @@ fun Application.usersRoutes(
 
     routing {
 
-        authenticate("admin-jwt") {
+        authenticate("access-jwt") {
             route("/api/users"){
                 post {
                     try {

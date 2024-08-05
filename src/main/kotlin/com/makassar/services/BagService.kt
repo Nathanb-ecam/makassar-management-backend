@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
+import org.litote.kmongo.`in`
 import java.util.UUID
 
 
@@ -40,6 +41,10 @@ class BagService(private val database: CoroutineDatabase) : GenericService<BagDt
 
     override suspend fun getAll(): List<Bag> = withContext(Dispatchers.IO) {
         bagCollection.find().toList()
+    }
+
+    suspend fun getAllByIds(ids: List<String>): List<Bag> = withContext(Dispatchers.IO) {
+        bagCollection.find(Bag::id `in` ids ).toList()
     }
 
 
