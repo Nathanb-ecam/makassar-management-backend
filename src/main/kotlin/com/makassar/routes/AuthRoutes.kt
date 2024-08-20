@@ -20,25 +20,31 @@ fun Application.authRoutes(
 
     routing {
         post("/api/login") {
-            val user = call.receive<LoginRequest>()
-            val matchedUser = authService.loginWithMail(user) ?: return@post call.respond(HttpStatusCode.Unauthorized)
+            try{
+                val user : LoginRequest = call.receive<LoginRequest>()
+                val matchedUser = authService.loginWithMail(user) ?: return@post call.respond(HttpStatusCode.Unauthorized,"wtf")
 
+                val accessToken = jwtConfig.generateToken(mapOf("type" to "access" ),accessTokenLifeTime)
+                val refreshToken = jwtConfig.generateToken(mapOf("type" to "refresh" ),refreshTokenLifeTime)
 
-            val accessToken = jwtConfig.generateToken(mapOf("type" to "access" ),accessTokenLifeTime)
-            val refreshToken = jwtConfig.generateToken(mapOf("type" to "refresh" ),refreshTokenLifeTime)
-
-            call.response.cookies.append(
-                Cookie(
-                    name = "refreshToken",
-                    value = refreshToken,
-                    httpOnly = true,
-                    secure = true,
-                    path = "/",
-                    maxAge = refreshTokenLifeTime.toInt()
+                call.response.cookies.append(
+                    Cookie(
+                        name = "refreshToken",
+                        value = refreshToken,
+                        httpOnly = true,
+                        secure = true,
+                        path = "/",
+                        maxAge = refreshTokenLifeTime.toInt()
+                    )
                 )
-            )
 
-            return@post call.respond(hashMapOf("accessToken" to accessToken))
+                return@post call.respond(hashMapOf("accessToken" to accessToken))
+            }catch(e: Exception){
+                call.respond(HttpStatusCode.BadRequest,e.toString())
+            }
+
+
+
 
 
 

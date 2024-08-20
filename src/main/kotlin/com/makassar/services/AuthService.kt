@@ -12,9 +12,13 @@ class AuthService(private val database: CoroutineDatabase) {
 
 
     suspend fun loginWithMail(loginRequest: LoginRequest): User? = withContext(Dispatchers.IO) {
-        val user = userCollection.findOne(User::mail eq loginRequest.mail)
-        if(user != null && user.passwordHash == loginRequest.password){
-            return@withContext user
+        try {
+            val user = userCollection.findOne(User::mail eq loginRequest.mail)
+            if(user != null && user.passwordHash == loginRequest.password){
+                return@withContext user
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return@withContext null
     }
