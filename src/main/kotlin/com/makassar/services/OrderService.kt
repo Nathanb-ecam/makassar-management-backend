@@ -1,4 +1,5 @@
 
+import com.makassar.dto.BagDto
 import com.makassar.dto.OrderDto
 import com.makassar.entities.Order
 import com.makassar.services.GenericService
@@ -49,7 +50,6 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
                 discount = updated.discount ?: existingOrder.discount,
                 status = updated.status ?: existingOrder.status,
                 bags = updated.bags ?: existingOrder.bags,
-
                 plannedDate = updated.plannedDate ?: existingOrder.plannedDate,
                 updatedAt = System.currentTimeMillis(),
             )
@@ -63,6 +63,31 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
     override suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {
         val result = orderCollection.deleteOneById(id)
         result.wasAcknowledged()
+    }
+
+    suspend fun addBagToOrder(orderId:String,bagId:String, quantity: String) : Boolean = withContext(Dispatchers.IO) {
+        val existingOrder = orderCollection.findOneById(orderId) ?: return@withContext false
+
+
+        val updatedBags = existingOrder.bags?.toMutableMap() ?: mutableMapOf()
+
+        if (updatedBags.containsKey(bagId)) {
+            val existingQuantity = updatedBags[bagId]
+            val newQuantity = existingQuantity?.toInt()?.plus(quantity.toInt())
+            updatedBags[bagId] =  newQuantity.toString()
+        } else {
+            updatedBags[bagId] = quantity
+        }
+
+
+        val updatedOrder = existingOrder.copy(
+            bags = updatedBags,
+            updatedAt = System.currentTimeMillis()
+        )
+
+        val result = orderCollection.replaceOneById(orderId, updatedOrder)
+        return@withContext result.wasAcknowledged()
+
     }
 
 

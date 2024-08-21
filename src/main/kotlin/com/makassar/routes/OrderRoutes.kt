@@ -1,4 +1,5 @@
 
+import com.makassar.dto.BagDto
 import com.makassar.dto.OrderDto
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -37,7 +38,7 @@ fun Application.ordersRoutes(
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val order = orderService.getOneById(id)
                         if (order != null) {
-                            call.respond(order)
+                            return@get call.respond(order)
                         }
                         call.respond(HttpStatusCode.NotFound)
 
@@ -91,7 +92,28 @@ fun Application.ordersRoutes(
                     }
 
                 }
+
+
+                get("{orderId}/addBag/{bagId}/{quantity}") {
+                    try {
+                        val orderId = call.parameters["orderId"] ?: throw IllegalArgumentException("No ID found")
+                        val bagId = call.parameters["bagId"] ?: throw IllegalArgumentException("No quantity found")
+                        val quantity = call.parameters["quantity"] ?: throw IllegalArgumentException("No quantity found")
+                        orderService.addBagToOrder(orderId,bagId,quantity).let {
+                            val result =  if(it)  "Successfully modified order with id $orderId"  else "Order with id $orderId not found"
+                            call.respond(HttpStatusCode.OK,result)
+                        }
+                    }catch (e : IllegalArgumentException){
+                        call.respond(HttpStatusCode.BadRequest,"Invalid ID format")
+                    }
+                    catch (e : Exception){
+                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
+                    }
+
+                }
+
             }
+
         }
 
 
