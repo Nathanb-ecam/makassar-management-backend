@@ -1,6 +1,6 @@
 
 import com.makassar.dto.BagPartDto
-import com.makassar.utils.FileUploadProcessing
+import com.makassar.utils.FileProcessing
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -61,7 +61,7 @@ fun Application.bagSubPartRoutes(
                         return@post call.respond(HttpStatusCode.BadRequest, "BagSubPart requires property 'family'")
                     }
 
-                    val fileUploadResult = FileUploadProcessing.handleFileUploads("bags-subparts",fileParts,allowedFileTypesString)
+                    val fileUploadResult = FileProcessing.handleFileUploads("bags-subparts",fileParts,allowedFileTypesString)
                     val uploadedImagesUrls = fileUploadResult["imageUrls"]?.toList()
 
 

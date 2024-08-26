@@ -1,8 +1,8 @@
 package com.makassar.entities
 
+import com.makassar.dto.AddressDto
 import kotlinx.serialization.Serializable
 import org.bson.codecs.pojo.annotations.BsonId
-import org.bson.types.ObjectId
 import java.util.*
 
 /**
@@ -23,8 +23,13 @@ data class Customer(
     val name: String? = null,
     val mail: String? = null,
     val phone: String? = null,
+    val tva: String? = null,
+
+    val professionalAddress: AddressDto? = null,
+    val shippingAddress: AddressDto? = null,
+    /*val professionalAddress: String? = null,
     val shippingCountry: String? = null,
-    val shippingAddress: String? = null,
+    val shippingPostalCode: String? = null,*/
     val type:String? = null,
     val createdAt: Long? = null,
     val updatedAt: Long? = null,

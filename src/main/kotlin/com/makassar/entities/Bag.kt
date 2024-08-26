@@ -1,6 +1,7 @@
 package com.makassar.entities
 
 
+import com.makassar.dto.BagDto
 import kotlinx.serialization.Serializable
 import org.bson.codecs.pojo.annotations.BsonId
 import java.util.*
@@ -36,6 +37,7 @@ data class Bag(
     @BsonId val id: String = UUID.randomUUID().toString(),
     val marketingName: String? = null,
     val retailPrice: String? = null,
+    val wholesalePrice: String? = null,
     val sku : String? = null,
     val colors: List<String>? = null,
 
@@ -55,16 +57,24 @@ data class Bag(
     val updatedAt: Long? = null,
 )
 
-/*
 
-    val handles: Map<String,String>? = null,
-    val bodies: Map<String,String>? = null,
-    val shoulderStraps: Map<String,String>? = null,
-    val figures: Map<String,String>? = null,
-    val liners: Map<String,String>? = null,
-    val screws: Map<String,String>? = null,
-    val others: Map<String,String>? = null,
+fun Bag.toDto(): BagDto{
+    return BagDto(
+        marketingName = this.marketingName,
+        retailPrice = this.retailPrice,
+        wholesalePrice = this.wholesalePrice,
+        sku = this.sku,
+        colors = this.colors,
+        handles = this.handles,
+        bodies = this.bodies,
+        shoulderStraps = this.shoulderStraps,
+        figures = this.figures,
+        liners = this.liners,
+        screws = this.screws,
+        others = this.others,
+        materials = this.materials,
+        imageUrls = this.imageUrls,
+        description = this.description
+    )
+}
 
-    val materials : Map<String,String>? = null,
-    val imageUrls :  List<String>? = null,
- */

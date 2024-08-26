@@ -1,7 +1,9 @@
 
 import com.makassar.dto.BagDto
-import com.makassar.dto.requests.IdsRequest
-import com.makassar.utils.FileUploadProcessing
+import com.makassar.dto.requests.StringListRequest
+import com.makassar.dto.toEntity
+import com.makassar.utils.FileProcessing
+import com.makassar.utils.FileProcessing.deleteUploadedFilesWithNames
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -54,7 +56,7 @@ fun Application.bagRoutes(
                             }
                             else -> {logger.debug("Unhandled part ${part.name}")}
                         }
-                        part.dispose()
+
                     }
 
                     if (bagDto == null) return@post call.respond(HttpStatusCode.BadRequest, "Bag information were not provided")
@@ -63,17 +65,17 @@ fun Application.bagRoutes(
                         return@post call.respond(HttpStatusCode.BadRequest, "Bag requires property 'marketingName'")
                     }
 
-                    val fileUploadResult = FileUploadProcessing.handleFileUploads("bags",fileParts,allowedFileTypesString)
+                    val fileUploadResult = FileProcessing.handleFileUploads("bags",fileParts,allowedFileTypesString)
                     val uploadedImagesUrls = fileUploadResult["imageUrls"]?.toList()
 
 
-                    bagDto = bagDto!!.copy(
-                        imageUrls =  uploadedImagesUrls,
-                    )
+                    bagDto = bagDto!!.copy(imageUrls =  uploadedImagesUrls)
 
                     val id = bagService.createOne(bagDto!!)
+
+
                     if(fileUploadResult["fileExtensionNotAllowed"]!!.isNotEmpty()) call.respond(HttpStatusCode.Created, mapOf( "bagId" to id, "errors" to "File extensions not allowed : ${fileUploadResult["fileExtensionNotAllowed"]}"))
-                    else call.respond(HttpStatusCode.Created, mapOf("bagId" to id))
+                    else call.respond(HttpStatusCode.Created, mapOf("bag" to bagDto!!.toEntity(id)))
 
                 }
 
@@ -108,8 +110,8 @@ fun Application.bagRoutes(
 
                 post("/withIds"){
                     try {
-                        val bagIds = call.receive<IdsRequest>()
-                        val bags = bagService.getAllByIds(bagIds.ids)
+                        val bagIds = call.receive<StringListRequest>()
+                        val bags = bagService.getAllByIds(bagIds.stringList)
                         if (bags.isEmpty()) {
                             call.respond("No bag found for those ids")
                         }
@@ -140,9 +142,16 @@ fun Application.bagRoutes(
                 delete("{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
+                        val imageUrls = call.receive<StringListRequest>()
                         bagService.deleteOneById(id).let {
-                            val result =  if(it)  "Successfully deleted bag with id $id"  else "bag with id $id not found"
-                            call.respond(HttpStatusCode.OK, result)
+                            if(it) {
+                                val filesDeleted = deleteUploadedFilesWithNames(imageUrls.stringList.toSet())
+                                if(filesDeleted) call.respond(HttpStatusCode.OK,mapOf("bagId" to id))
+                                else call.respond(HttpStatusCode.OK, mapOf("bagId" to id, "err" to "some images haven't been removed"))
+                            }
+
+                            else call.respond(HttpStatusCode.OK, "bag with id $id not found")
+
                         }
                     }catch (e : IllegalArgumentException){
                         call.respond(HttpStatusCode.BadRequest,"Invalid ID format")

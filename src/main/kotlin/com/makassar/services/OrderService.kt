@@ -41,9 +41,9 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
     }
 
     override suspend fun updateOneById(id: String, updated: OrderDto): Boolean = withContext(Dispatchers.IO) {
-        val existingOrder = orderCollection.findOneById(id)
-        if (existingOrder != null) {
-            val updatedOrder = existingOrder.copy(
+        val existingOrder = orderCollection.findOneById(id) ?: return@withContext false
+
+        val updatedOrder = existingOrder.copy(
                 customerId = updated.customerId ?: existingOrder.customerId,
                 totalPrice = updated.totalPrice ?: existingOrder.totalPrice,
                 deliveryCost = updated.deliveryCost ?: existingOrder.deliveryCost,
@@ -55,9 +55,7 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
             )
             val result = orderCollection.replaceOneById(id, updatedOrder)
             result.wasAcknowledged()
-        } else {
-            false
-        }
+
     }
 
     override suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {

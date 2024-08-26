@@ -11,15 +11,23 @@ import io.netty.handler.codec.DefaultHeaders
 fun Application.configureCORS() {
 
     install(CORS) {
+
+        allowOrigins {true}
+        allowHost("localhost:3000")
+        allowHost("127.0.0.1:3000")
+
+
+
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Authorization)
-
+        allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Patch)
         allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Options)
         allowCredentials = true
-        anyHost()
-        // host("localhost:5173")
+
     }
 }
 

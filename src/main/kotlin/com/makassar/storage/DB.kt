@@ -8,12 +8,15 @@ import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.reactivestreams.KMongo
+import org.slf4j.LoggerFactory
 
 
 object DatabaseConfig {
 
     private var client: CoroutineClient? = null
     private var database: CoroutineDatabase? = null
+
+    private val logger = LoggerFactory.getLogger("DB")
 
     @Synchronized
     fun getDatabase(environment: ApplicationEnvironment): CoroutineDatabase {
@@ -36,6 +39,9 @@ object DatabaseConfig {
 
         client = newClient
         database = newDatabase
+
+
+        logger.info("MongoDB : Database $databaseName connected")
 
         environment.monitor.subscribe(ApplicationStopped) {
             newClient.close()

@@ -13,5 +13,4 @@ data class OrderDto(
     val discount: String? = null,
     val bags : Map<String,String>? = null, // "bagId" : quantity
     val plannedDate: String? = null,
-
 )

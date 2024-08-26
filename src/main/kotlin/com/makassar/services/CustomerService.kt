@@ -4,7 +4,6 @@ import com.makassar.entities.Customer
 import com.makassar.services.GenericService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
@@ -20,7 +19,7 @@ class CustomerService(private val database: CoroutineDatabase) : GenericService<
             mail = new.mail,
             phone = new.phone,
             type = new.type ?: "Professional",
-            shippingCountry = new.shippingCountry,
+            professionalAddress = new.professionalAddress,
             shippingAddress = new.shippingAddress,
             createdAt = System.currentTimeMillis(),
         )
@@ -45,7 +44,7 @@ class CustomerService(private val database: CoroutineDatabase) : GenericService<
             val updatedCustomer = existingCustomer.copy(
                 name = updated.name ?: existingCustomer.name,
                 mail = updated.mail ?: existingCustomer.mail,
-                shippingCountry = updated.shippingCountry ?: existingCustomer.shippingCountry,
+                professionalAddress = updated.professionalAddress ?: existingCustomer.professionalAddress,
                 shippingAddress = updated.shippingAddress ?: existingCustomer.shippingAddress,
                 type = updated.type ?: existingCustomer.type,
                 phone = updated.phone ?: existingCustomer.phone,
