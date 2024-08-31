@@ -15,24 +15,24 @@ fun Application.ordersRoutes(
 
     routing {
         authenticate("access-jwt") {
-            route("/api/orders"){
-                post {
+            route("/api"){
+                post("/orders") {
                     try {
                         val order = call.receive<OrderDto>()
                         if(order.customerId != null){
                             val id = orderService.createOne(order)
-                            call.respond(HttpStatusCode.Created, mapOf("orderId" to id) )
+                            call.respond(HttpStatusCode.Created, mapOf("id" to id) )
                         }else call.respond(HttpStatusCode.BadRequest,"Customer Id cannot be null")
 
 
                     }
                     catch (e : Exception){
-                        call.respond(HttpStatusCode.BadRequest,e.toString())
+                        call.respond(HttpStatusCode.BadRequest, mapOf("err" to e.toString()))
                     }
 
                 }
 
-                get("{id}") {
+                get("/orders/{id}") {
 
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
@@ -49,7 +49,24 @@ fun Application.ordersRoutes(
                     }
                 }
 
-                get {
+                get("/orders/{id}/with-bags-detailed") {
+
+                    try {
+                        val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
+                        val order = orderService.getOrderWithBagsDetailed(id)
+                        if (order != null) {
+                            return@get call.respond(order)
+                        }
+                        call.respond(HttpStatusCode.NotFound)
+
+                    } catch (e: IllegalArgumentException) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
+                    }catch (e : Exception){
+                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
+                    }
+                }
+
+                get("/orders") {
                     try {
                         val orders = orderService.getAll()
                         if (orders.isEmpty()) {
@@ -61,7 +78,44 @@ fun Application.ordersRoutes(
                     }
                 }
 
-                put("{id}") {
+
+                get("/orders-overviews") {
+                    try {
+                        val orders = orderService.getOverviewsOfOrders()
+                        if (orders.isEmpty()) {
+                            call.respond("No orders found")
+                        }
+                        call.respond(HttpStatusCode.OK, orders)
+                    } catch (e : Exception){
+                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
+                    }
+                }
+                get("/orders/{id}/customer-detailed"){
+                    try {
+                        val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
+                        val order = orderService.getOrderWithCustomerDetailed(id)
+                            ?: return@get call.respond(HttpStatusCode.NotFound,"Order not found")
+
+                        call.respond(HttpStatusCode.OK, order)
+                    } catch (e : Exception){
+                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
+                    }
+                }
+
+                get("/orders/{id}/fully-detailed"){
+                    try {
+                        val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
+                        val order = orderService.getOrderFullyDetailedById(id)
+                            ?: return@get call.respond(HttpStatusCode.NotFound,"Order not found")
+
+                        call.respond(HttpStatusCode.OK, order)
+                    } catch (e : Exception){
+                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
+                    }
+
+                }
+
+                put("/orders/{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val order = call.receive<OrderDto>()
@@ -78,11 +132,11 @@ fun Application.ordersRoutes(
 
                 }
 
-                delete("{id}") {
+                delete("/orders/{id}") {
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         orderService.deleteOneById(id).let {
-                            val result =  if(it)  "Successfully deleted order with id $id"  else "Order with id $id not found"
+                            val result =  if(it)  mapOf("id" to id)  else mapOf("err" to "Order with id $id not found")
                             call.respond(HttpStatusCode.OK, result)
                         }
                     }catch (e : IllegalArgumentException){
@@ -94,7 +148,7 @@ fun Application.ordersRoutes(
                 }
 
 
-                get("{orderId}/addBag/{bagId}/{quantity}") {
+                get("/orders/{orderId}/add-bag/{bagId}/{quantity}") {
                     try {
                         val orderId = call.parameters["orderId"] ?: throw IllegalArgumentException("No ID found")
                         val bagId = call.parameters["bagId"] ?: throw IllegalArgumentException("No quantity found")

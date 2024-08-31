@@ -20,7 +20,7 @@ fun Application.customersRoutes(
                         val customer = call.receive<CustomerDto>()
                         if(customer.name != null){
                             val newCustomer = customerService.createOne(customer)
-                            call.respond(HttpStatusCode.Created, mapOf("customerId" to newCustomer))
+                            call.respond(HttpStatusCode.Created, mapOf("id" to newCustomer))
                         }else call.respond(HttpStatusCode.BadRequest,"Customer must have a name.")
                     }
                     catch (e : Exception){
@@ -63,7 +63,7 @@ fun Application.customersRoutes(
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val customer = call.receive<CustomerDto>()
                         customerService.updateOneById(id, customer).let {
-                            val result =  if(it)  "Successfully modified customer with id $id"  else "Customer with id $id not found"
+                            val result =  if(it)   mapOf("id" to id)  else mapOf("err" to "Customer with id $id not found")
                             call.respond(HttpStatusCode.OK,result)
                         }
                     }catch (e : IllegalArgumentException){
@@ -79,7 +79,7 @@ fun Application.customersRoutes(
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         customerService.deleteOneById(id).let {
-                            val result =  if(it)  "Successfully deleted customer with id $id"  else "Customer with id $id not found"
+                            val result =  if(it)  mapOf( "id" to id)  else mapOf("err" to "Customer with id $id not found")
                             call.respond(HttpStatusCode.OK, result)
                         }
                     }catch (e : IllegalArgumentException){

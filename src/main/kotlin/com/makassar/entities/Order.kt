@@ -1,6 +1,9 @@
 package com.makassar.entities
 
 
+import com.makassar.dto.OrderBagDetailed
+import com.makassar.dto.Price
+import com.makassar.dto.requests.PlannedDate
 import kotlinx.serialization.Serializable
 import org.bson.codecs.pojo.annotations.BsonId
 import java.util.*
@@ -11,6 +14,7 @@ import java.util.*
  *
  * @property id The unique identifier of the order.
  * @property customerId The unique identifier of the customer who made the order.
+ * @property orderNumber The autoIncremented number given to each order.
  * @property status The current status of the order, can take "open", "preparation", "ready".
  * @property description A brief description of the order.
  * @property comments Any additional comments about the order.
@@ -29,15 +33,28 @@ import java.util.*
 data class Order(
     @BsonId val id: String = UUID.randomUUID().toString(),
     val customerId: String? = null,
+    val orderNumber: String? = null,
+
     val status :  String? = null,
-    val totalPrice: String? = null,
-    val deliveryCost: String? = null,
-    val discount: String? = null,
-    val bags : Map<String,String>? = null, // list of strings that are ids of the corresponding Product(s)
+    val price: Price? = null,
+    val bags : Map<String,String>? = null, // map of strings that are ids of the corresponding Product(s) to its quantity
+    /*val plannedDate: PlannedDate? = null,*/
     val plannedDate: String? = null,
+
+    val createdLocation: String? = null,
 
     val createdAt: Long? = null,
     val updatedAt: Long? = null,
     val description: String? = null,
     val comments: String? = null,
 )
+
+
+
+
+fun Order.toBagDetailedOrder(bags : Map<Bag,String>): OrderBagDetailed {
+    return OrderBagDetailed(
+        customerId = customerId,
+        bags = bags,
+        )
+}

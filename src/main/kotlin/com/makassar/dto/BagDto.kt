@@ -52,3 +52,13 @@ fun BagDto.toEntity(id : String): Bag {
 
 }
 
+
+@Serializable
+data class BagWithQuantity(
+    val bag: Bag? = null,
+    val quantity : String? = null
+)
+
+
+
+
