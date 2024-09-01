@@ -148,6 +148,24 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         ).toList()
     }
 
+    suspend fun getOrderOverviewById(id : String) : OrderOverview? = withContext(Dispatchers.IO){
+        return@withContext orderCollection.aggregate<OrderOverview>(
+            match(Order::id eq id ),
+            lookup(from = "customer", localField = "customerId", foreignField = "_id", newAs = "customer"),
+            unwind("\$customer"),
+            project(
+                OrderOverview::id from "\$_id",
+                OrderOverview::customerName from "\$customer.name",
+                OrderOverview::orderNumber from "\$orderNumber",
+                OrderOverview::status from "\$status",
+                OrderOverview::price from "\$price",
+                OrderOverview::plannedDate from "\$plannedDate",
+                OrderOverview::createdAt from "\$createdAt",
+                OrderOverview::updatedAt from "\$updatedAt",
+            )
+        ).first()
+    }
+
 
     suspend fun getOrderWithCustomerDetailed(id: String): OrderCustomerDetailed? = withContext(Dispatchers.IO) {
         return@withContext orderCollection.aggregate<OrderCustomerDetailed>(

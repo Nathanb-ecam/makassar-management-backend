@@ -39,8 +39,8 @@ fun Application.module() {
     val issuer = environment.config.tryGetString("jwt.issuer") ?: "issuer"
     val secret = environment.config.tryGetString("jwt.secret") ?: "secret"
     val realm = environment.config.tryGetString("jwt.realm") ?: "myRealm"
-    val accessTokenLifeTime = environment.config.tryGetString("jwt.accessToken.lifetime")?.toLong() ?: (1000 * 60*5)
-    val refreshTokenLifeTime = environment.config.tryGetString("jwt.refreshToken.lifetime")?.toLong() ?: (1000* 60 * 60 * 24 * 3)
+    val accessTokenLifeTime = environment.config.tryGetString("jwt.accessToken.lifetime")?.toLong() ?: (1000 * 60*1)
+    val refreshTokenLifeTime = environment.config.tryGetString("jwt.refreshToken.lifetime")?.toLong() ?: (1000* 60 * 60 * 24 * 1)
 
     val jwtConfig = JWTConfig(audience,issuer,secret, realm)
 

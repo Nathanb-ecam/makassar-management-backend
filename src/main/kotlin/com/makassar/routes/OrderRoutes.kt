@@ -22,7 +22,7 @@ fun Application.ordersRoutes(
                         if(order.customerId != null){
                             val id = orderService.createOne(order)
                             call.respond(HttpStatusCode.Created, mapOf("id" to id) )
-                        }else call.respond(HttpStatusCode.BadRequest,"Customer Id cannot be null")
+                        }else call.respond(HttpStatusCode.BadRequest, mapOf("err" to "Customer Id cannot be null"))
 
 
                     }
@@ -79,6 +79,17 @@ fun Application.ordersRoutes(
                 }
 
 
+                get("/orders-overviews/{id}") {
+                    try {
+                        val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest, "No ID found")
+                        val order = orderService.getOrderOverviewById(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+
+                        call.respond(HttpStatusCode.OK, mapOf("order" to order))
+                    } catch (e : Exception){
+                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
+                    }
+                }
+
                 get("/orders-overviews") {
                     try {
                         val orders = orderService.getOverviewsOfOrders()
@@ -90,6 +101,8 @@ fun Application.ordersRoutes(
                         call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
                     }
                 }
+
+
                 get("/orders/{id}/customer-detailed"){
                     try {
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
@@ -120,7 +133,7 @@ fun Application.ordersRoutes(
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val order = call.receive<OrderDto>()
                         orderService.updateOneById(id, order).let {
-                            val result =  if(it)  "Successfully modified order with id $id"  else "Order with id $id not found"
+                            val result =  if(it)  mapOf("id" to id)  else mapOf("err" to "Order with id $id not found")
                             call.respond(HttpStatusCode.OK,result)
                         }
                     }catch (e : IllegalArgumentException){

@@ -18,6 +18,7 @@ class CustomerService(private val database: CoroutineDatabase) : GenericService<
             name = new.name,
             mail = new.mail,
             phone = new.phone,
+            tva = new.tva,
             type = new.type ?: "Professional",
             professionalAddress = new.professionalAddress,
             shippingAddress = new.shippingAddress,
@@ -44,6 +45,7 @@ class CustomerService(private val database: CoroutineDatabase) : GenericService<
             val updatedCustomer = existingCustomer.copy(
                 name = updated.name ?: existingCustomer.name,
                 mail = updated.mail ?: existingCustomer.mail,
+                tva = updated.tva ?: existingCustomer.tva,
                 professionalAddress = updated.professionalAddress ?: existingCustomer.professionalAddress,
                 shippingAddress = updated.shippingAddress ?: existingCustomer.shippingAddress,
                 type = updated.type ?: existingCustomer.type,

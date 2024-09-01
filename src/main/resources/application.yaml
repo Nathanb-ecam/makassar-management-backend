@@ -21,11 +21,12 @@ ktor:
 
 
 jwt:
-    secret:  "secret" # should use env variables
+    secret:  "secret"
     issuer: "http://0.0.0.0:8080/"
-    audience: "http://0.0.0.0:8080/hello"
-    realm: "Access to 'hello'"
+    audience: "http://0.0.0.0:8080"
+    realm: "Access to api"
     accessToken:
         lifetime: 600000000
+        #lifetime: 30000
     refreshToken:
-        lifetime: 300000000
+        lifetime: 3600000

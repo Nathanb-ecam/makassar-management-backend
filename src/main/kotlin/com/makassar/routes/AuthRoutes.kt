@@ -34,6 +34,7 @@ fun Application.authRoutes(
                         httpOnly = true,
                         secure = true,
                         path = "/",
+                        domain = "http://localhost:8080",
                         maxAge = refreshTokenLifeTime.toInt()
                     )
                 )
@@ -59,7 +60,8 @@ fun Application.authRoutes(
                 }
             }*/
         get("/api/refresh-token") {
-
+            val cookies = call.request.cookies
+            println("Received cookies: $cookies")
             val refreshToken = call.request.cookies["refreshToken"]
                 ?: return@get call.respond(HttpStatusCode.Unauthorized, "Refresh token cookie missing")
 
