@@ -1,39 +1,44 @@
 version: '3.8'
 
 services:
-#  makassar_management_api:
-#    image: makassar-management:latest
-#    container_name: makassar-mgmt-api
-#    ports:
-#      - "8080:8080"
-#    environment: {}
-#      POSTGRES_DB: recipe
-#      POSTGRES_USER: user
-#      POSTGRES_PASSWORD: hardPassword
-      #    volumes:
-    #- ./postgres_data:/var/lib/postgresql/data
-#  mysql:
-#    image: mysql:latest
-#    container_name: mysql_db
-#    ports:
-#      - "3306:3306"
-#    environment:
-#      MYSQL_DATABASE: recipe
-#      MYSQL_USER: user
-#      MYSQL_PASSWORD: hardPassword
-#      MYSQL_ROOT_PASSWORD: root_password
-#    volumes:
-#      - ./mysql_data:/var/lib/mysql_data
+
+  makassar_management_react:
+    image: thenatz1999/makassar-management-react-prod:0.0.2
+    container_name: makassar-mgmt-react
+    ports:
+      - "3000:3000"
+    environment: {}
+      #VITE_API_URL: "http://buchinn.be:8080/api"
+    #VITE_API_IMAGES_URL: "http://buchinn.be:8080/uploads"
+
+
+  makassar_management_api:
+    image: thenatz1999/makassar-management-api-prod:0.0.6
+    container_name: makassar-mgmt-api
+    ports:
+      - "8080:8080"
+
+    environment:
+      MONGO_DBNAME: makassar-management-db-dev
+      MONGO_HOST: mongoDB
+      MONGO_USER: mongo-makassar
+      MONGO_PASSWORD: mongo-makassar-password
+
+    depends_on:
+      - mongoDB
+
+
+
 
   mongoDB:
-      image: mongo:latest
-      container_name: mongodb
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: mongo-makassar
-        MONGO_INITDB_ROOT_PASSWORD: mongo-makassar-password
-        MONGO_INITDB_DATABASE: makassar-management-db-dev
-      ports:
-        - "27017:27017"
-      volumes:
-        - ./mongo-data:/data/db
+    image: mongo:latest
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo-makassar
+      MONGO_INITDB_ROOT_PASSWORD: mongo-makassar-password
+      MONGO_INITDB_DATABASE: makassar-management-db-dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
 

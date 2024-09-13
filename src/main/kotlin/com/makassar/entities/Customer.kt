@@ -25,11 +25,11 @@ data class Customer(
     val phone: String? = null,
     val tva: String? = null,
 
-    val professionalAddress: AddressDto? = null,
-    val shippingAddress: AddressDto? = null,
-    /*val professionalAddress: String? = null,
-    val shippingCountry: String? = null,
-    val shippingPostalCode: String? = null,*/
+/*    val professionalAddress: AddressDto? = null,
+    val shippingAddress: AddressDto? = null,*/
+    val professionalAddress: String? = null,
+    val shippingAddress: String? = null,
+
     val type:String? = null,
     val createdAt: Long? = null,
     val updatedAt: Long? = null,

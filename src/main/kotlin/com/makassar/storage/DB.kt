@@ -24,14 +24,19 @@ object DatabaseConfig {
     }
 
     private fun init(environment: ApplicationEnvironment): CoroutineDatabase {
-        val user = environment.config.tryGetString("ktor.database.mongo.user")
-        val password = environment.config.tryGetString("ktor.database.mongo.password")
-        val host = environment.config.tryGetString("ktor.database.mongo.host") ?: "127.0.0.1"
-        val port = environment.config.tryGetString("ktor.database.mongo.port") ?: "27017"
-        val maxPoolSize = environment.config.tryGetString("ktor.database.mongo.maxPoolSize")?.toInt() ?: 20
-        val databaseName = environment.config.tryGetString("ktor.database.mongo.dbname") ?: "myDatabase"
 
-        val credentials = user?.let { userVal -> password?.let { passwordVal -> "$userVal:$passwordVal@" } }.orEmpty()
+        val user = environment.config.propertyOrNull("ktor.appConfig.environment.database.mongo.user")?.getString() ?: "user"
+        val password = environment.config.propertyOrNull("ktor.appConfig.environment.database.mongo.password")?.getString() ?: "password"
+
+        val host = environment.config.propertyOrNull("ktor.appConfig.environment.database.mongo.host")?.getString() ?: "host"
+        val port = environment.config.propertyOrNull("ktor.appConfig.environment.database.mongo.port")?.getString() ?: "3080"
+        val maxPoolSize = environment.config.propertyOrNull("ktor.appConfig.environment.database.mongo.maxPoolSize")?.getString() ?: "24"
+        val databaseName = environment.config.propertyOrNull("ktor.appConfig.environment.database.mongo.dbname")?.getString() ?: "databaseName"
+
+        println(host)
+        println(databaseName)
+
+        val credentials = user.let { userVal -> password.let { passwordVal -> "$userVal:$passwordVal@" } }
         val uri = "mongodb://$credentials$host:$port/?maxPoolSize=$maxPoolSize&w=majority"
 
         val newClient = KMongo.createClient(ConnectionString(uri)).coroutine

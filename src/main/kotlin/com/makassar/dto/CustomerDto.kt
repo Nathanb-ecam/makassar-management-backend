@@ -8,10 +8,10 @@ data class CustomerDto(
     val mail: String? = null,
     val phone: String? = null,
     val tva: String? = null,
-    val professionalAddress: AddressDto? = null,
-    val shippingAddress: AddressDto? = null,
+/*    val professionalAddress: AddressDto? = null,
+    val shippingAddress: AddressDto? = null,*/
+    val professionalAddress: String? = null,
+    val shippingAddress: String? = null,
     val type:String? = null
-    /*    val shippingCountry: String? = null,
-    val shippingPostalCode: String? = null,
-    val shippingAddress: String? = null,*/
+
 )

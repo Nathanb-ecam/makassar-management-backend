@@ -1,32 +1,29 @@
 ktor:
-    application:
-        modules:
-            - com.makassar.ApplicationKt.module
-    deployment:
-        port: 8080
+  application:
+    modules:
+      - com.makassar.ApplicationKt.module
+  deployment:
+    port: 8080
+
+  appConfig:
+
+  environment:
+    allowedUploadFileTypes: "png,jpeg,jpg"
+
     database:
-        mongo:
-            user: "mongo-makassar"
-            password: "mongo-makassar-password"
-            host: "localhost"
-            port: "27017"
-            #maxPoolSize: 10
-            dbname: makassar-management-db-dev
-    appConfig:
+      mongo:
+        user: "$MONGO_USER:mongo-makassar-mgmt-user"
+        password: "$MONGO_PASSWORD:mongo-makassar-mgmt-password"
+        host: "$MONGO_HOST:mongoDB"
+        port: "$MONGO_PORT:27017"
+        dbname: "$MONGO_DBNAME:makassar-management-db-prod"
 
-    environment:
-        allowedUploadFileTypes: "png,jpeg,jpg"
-
-
-
-
-jwt:
-    secret:  "secret"
-    issuer: "http://0.0.0.0:8080/"
-    audience: "http://0.0.0.0:8080"
-    realm: "Access to api"
-    accessToken:
-        lifetime: 600000000
-        #lifetime: 30000
-    refreshToken:
-        lifetime: 3600000
+    jwt:
+      secret: "$JWT_SECRET:secret"
+      issuer: "$JWT_ISSUER:http://0.0.0.0:8080/"
+      audience: "$JWT_AUDIENCE:http://0.0.0.0:8080"
+      realm: "$JWT_REALM:Access to api"
+      accessToken:
+        lifetime: "$JWT_ACCESS_LIFETIME:600000000"
+      refreshToken:
+        lifetime: "$JWT_REFRESH_LIFETIME:3600000"

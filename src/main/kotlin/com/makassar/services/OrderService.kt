@@ -44,6 +44,8 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
             customerId = new.customerId,
             orderNumber = currentOrderNumber.toString(),
             createdLocation = new.createdLocation,
+            description = new.description,
+            comments = new.comments,
             status = new.status,
             price =  new.price,
             bags = new.bags,
