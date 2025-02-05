@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 open class OrderDto(
+    val userId: String? = null,
     val customerId: String? = null,
     val orderNumber: String? = null,
     val createdLocation: String? = null,
@@ -27,6 +28,7 @@ open class OrderDto(
 @Serializable
 data class OrderOverview(
     val id: String? = null,
+    val userId: String? = null,
     val customerName: String? = null,
     val orderNumber: String? = null,
     val status :  String? = null,
@@ -41,6 +43,7 @@ data class OrderOverview(
 @Serializable
 data class OrderFullyDetailed(
     val id: String? = null,
+    val userId: String? = null,
     val customer: Customer? = null,
     val orderNumber: String? = null,
     val status :  String? = null,
@@ -57,6 +60,7 @@ data class OrderFullyDetailed(
 @Serializable
 data class OrderCustomerDetailed(
     val id: String? = null,
+    val userId: String? = null,
     val customer: Customer? = null,
     val createdLocation: String? = null,
     val orderNumber: String? = null,
@@ -91,6 +95,7 @@ fun OrderCustomerDetailed.toFullyDetailed(bags: Map<String,BagWithQuantity>) : O
 }
 
 data class OrderBagDetailed(
+    val userId: String? = null,
     val customerId: String? = null,
     val orderNumber: String? = null,
 

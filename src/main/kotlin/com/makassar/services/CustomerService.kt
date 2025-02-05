@@ -2,9 +2,11 @@
 import com.makassar.dto.CustomerDto
 import com.makassar.entities.Customer
 import com.makassar.services.GenericService
+import com.mongodb.client.model.Filters.and
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.litote.kmongo.coroutine.CoroutineDatabase
+import org.litote.kmongo.eq
 import java.util.UUID
 
 
@@ -15,6 +17,7 @@ class CustomerService(private val database: CoroutineDatabase) : GenericService<
 
         val customer = Customer(
             id = UUID.randomUUID().toString(),
+            userId = new.userId,
             name = new.name,
             mail = new.mail,
             phone = new.phone,
@@ -29,18 +32,18 @@ class CustomerService(private val database: CoroutineDatabase) : GenericService<
         customer.id
     }
 
-    override suspend fun getAll(): List<Customer> = withContext(Dispatchers.IO) {
-        customerCollection.find().toList()
+    override suspend fun getAll(userId: String): List<Customer> = withContext(Dispatchers.IO) {
+        customerCollection.find(Customer::userId eq userId).toList()
     }
 
 
-    override suspend fun getOneById(id: String): Customer? = withContext(Dispatchers.IO) {
-        val customer = customerCollection.findOneById(id)
+    override suspend fun getOneById(userId : String, id: String): Customer? = withContext(Dispatchers.IO) {
+        val customer = customerCollection.findOne(and(Customer::id eq id, Customer::userId eq userId))
         customer
     }
 
-    override suspend fun updateOneById(id: String, updated: CustomerDto): Boolean = withContext(Dispatchers.IO) {
-        val existingCustomer = customerCollection.findOneById(id)
+    override suspend fun updateOneById(userId: String, id: String, updated: CustomerDto): Boolean = withContext(Dispatchers.IO) {
+        val existingCustomer = customerCollection.findOne(and(Customer::id eq id, Customer::userId eq userId))
         if (existingCustomer != null) {
             val updatedCustomer = existingCustomer.copy(
                 name = updated.name ?: existingCustomer.name,
@@ -52,15 +55,15 @@ class CustomerService(private val database: CoroutineDatabase) : GenericService<
                 phone = updated.phone ?: existingCustomer.phone,
                 updatedAt = System.currentTimeMillis(),
             )
-            val result = customerCollection.replaceOneById(id, updatedCustomer)
+            val result = customerCollection.replaceOne(and(Customer::id eq id, Customer::userId eq userId), updatedCustomer)
             result.wasAcknowledged()
         } else {
             false
         }
     }
 
-    override suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {
-        val result = customerCollection.deleteOneById(id)
+    override suspend fun deleteOneById(userId: String, id: String): Boolean = withContext(Dispatchers.IO) {
+        val result = customerCollection.deleteOne(and(Customer::id eq id, Customer::userId eq userId))
         result.wasAcknowledged()
     }
 

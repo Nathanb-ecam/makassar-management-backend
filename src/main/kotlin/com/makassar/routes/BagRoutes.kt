@@ -23,11 +23,12 @@ fun Application.bagRoutes(
     val logger = LoggerFactory.getLogger("BagRoutes")
     routing {
         authenticate("access-jwt"){
-            route("/api/bags"){
-                post{
+            route("/api"){
+                post("/bags"){
                     try{
                         val bagPart = call.receive<BagDto>()
                         if(bagPart.marketingName == null) return@post call.respond(HttpStatusCode.BadRequest,"Bag requires property 'marketingName'")
+                        if(bagPart.userId == null) return@post call.respond(HttpStatusCode.BadRequest,"tenantId was not specified")
 
                         val id = bagService.createOne(bagPart)
                         call.respond(HttpStatusCode.OK, mapOf("bagId" to id))
@@ -37,7 +38,7 @@ fun Application.bagRoutes(
                 }
 
 
-                post("/withImages"){
+                post("/bags/withImages"){
                     val multipart = call.receiveMultipart()
                     var bagDto: BagDto? = null
                     val fileParts = mutableListOf<PartData.FileItem>()
@@ -61,9 +62,10 @@ fun Application.bagRoutes(
 
                     if (bagDto == null) return@post call.respond(HttpStatusCode.BadRequest, "Bag information were not provided")
 
-                    if(bagDto!!.marketingName == null){
-                        return@post call.respond(HttpStatusCode.BadRequest, "Bag requires property 'marketingName'")
-                    }
+                    if(bagDto!!.marketingName == null) return@post call.respond(HttpStatusCode.BadRequest, "Bag requires property 'marketingName'")
+
+                    if(bagDto!!.userId == null) return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified")
+
 
                     val fileUploadResult = FileProcessing.handleFileUploads("bags",fileParts,allowedFileTypesString)
                     val uploadedImagesUrls = fileUploadResult["imageUrls"]?.toList()
@@ -79,11 +81,12 @@ fun Application.bagRoutes(
 
                 }
 
-                get("{id}") {
+                get("/tenant/{tenantId}/bags/{id}") {
 
                     try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val bag = bagService.getOneById(id)
+                        val bag = bagService.getOneById(userId, id)
                         if (bag != null) {
                             call.respond(bag)
                         }
@@ -96,9 +99,10 @@ fun Application.bagRoutes(
                     }
                 }
 
-            get {
+            get("/tenant/{tenantId}/bags") {
                     try {
-                        val bag = bagService.getAll()
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val bag = bagService.getAll(userId)
                         if (bag.isEmpty()) {
                             call.respond("No bag found")
                         }
@@ -108,10 +112,11 @@ fun Application.bagRoutes(
                     }
                 }
 
-                post("/withIds"){
+                post("/tenant/{tenantId}/bags/withIds"){
                     try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
                         val bagIds = call.receive<StringListRequest>()
-                        val bags = bagService.getAllByIds(bagIds.stringList)
+                        val bags = bagService.getAllByIds(userId, bagIds.stringList)
                         if (bags.isEmpty()) {
                             call.respond("No bag found for those ids")
                         }
@@ -122,11 +127,12 @@ fun Application.bagRoutes(
                 }
 
 
-                put("{id}") {
+                put("/tenant/{tenantId}/bags/{id}") {
                     try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val bag = call.receive<BagDto>()
-                        bagService.updateOneById(id, bag).let {
+                        bagService.updateOneById(userId, id, bag).let {
                             val result =  if(it)  "Successfully modified bag with id $id"  else "bag with id $id not found"
                             call.respond(HttpStatusCode.OK,result)
                         }
@@ -139,11 +145,12 @@ fun Application.bagRoutes(
 
                 }
 
-                delete("{id}") {
+                delete("/tenant/{tenantId}/bags/{id}") {
                     try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val imageUrls = call.receive<StringListRequest>()
-                        bagService.deleteOneById(id).let {
+                        bagService.deleteOneById(userId, id).let {
                             if(it) {
                                 val filesDeleted = deleteUploadedFilesWithNames(imageUrls.stringList.toSet())
                                 if(filesDeleted) call.respond(HttpStatusCode.OK,mapOf("bagId" to id))

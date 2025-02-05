@@ -32,6 +32,7 @@ import java.util.*
 @Serializable
 data class Order(
     @BsonId val id: String = UUID.randomUUID().toString(),
+    val userId: String? = null,
     val customerId: String? = null,
     val orderNumber: String? = null,
 

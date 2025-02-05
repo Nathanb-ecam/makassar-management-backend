@@ -28,6 +28,7 @@ import java.util.*
 @Serializable
 data class BagPart(
     @BsonId val id: String = UUID.randomUUID().toString(),
+    val userId: String? = null,
     val marketingName: String? = null,
     val singleItemPrice: String? = null,
     val ref: String? = null,

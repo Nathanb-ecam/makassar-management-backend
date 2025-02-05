@@ -11,6 +11,19 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 
+suspend fun CreateUser(call: ApplicationCall, userService: UserService) {
+    try {
+        val user = call.receive<UserDto>()
+        if(user.mail != null){
+            val id = userService.createOne(user)
+            call.respond(HttpStatusCode.Created, id)
+        }else call.respond(HttpStatusCode.BadRequest,"User must have an email.")
+    }
+    catch (e : Exception){
+        call.respond(HttpStatusCode.BadRequest,e.toString())
+    }
+}
+
 fun Application.usersRoutes(
     userService : UserService
 ) {
@@ -20,16 +33,7 @@ fun Application.usersRoutes(
         authenticate("access-jwt") {
             route("/api/users"){
                 post {
-                    try {
-                        val user = call.receive<UserDto>()
-                        if(user.mail != null){
-                            val id = userService.createOne(user)
-                            call.respond(HttpStatusCode.Created, id)
-                        }else call.respond(HttpStatusCode.BadRequest,"User must have an email.")
-                    }
-                    catch (e : Exception){
-                        call.respond(HttpStatusCode.BadRequest,e.toString())
-                    }
+
 
                 }
 

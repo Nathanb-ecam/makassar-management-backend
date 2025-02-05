@@ -20,6 +20,7 @@ import java.util.*
 @Serializable
 data class Customer(
     @BsonId val id: String = UUID.randomUUID().toString(),
+    val userId: String? = null,
     val name: String? = null,
     val mail: String? = null,
     val phone: String? = null,

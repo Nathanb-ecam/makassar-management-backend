@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BagPartDto(
+    val userId: String? = null,
     val marketingName: String? = null,
     val singleItemPrice: String? = null,
     val description: String? = null,

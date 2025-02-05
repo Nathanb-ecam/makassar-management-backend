@@ -3,10 +3,12 @@ import com.makassar.dto.BagDto
 import com.makassar.entities.Bag
 import com.makassar.services.GenericService
 import com.makassar.utils.ServiceUtils
+import com.mongodb.client.model.Filters.and
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineDatabase
+import org.litote.kmongo.eq
 import org.litote.kmongo.`in`
 import java.util.UUID
 
@@ -17,6 +19,7 @@ class BagService(private val database: CoroutineDatabase) : GenericService<BagDt
     override suspend fun createOne(new: BagDto): String = withContext(Dispatchers.IO) {
         val bag = Bag(
             id = UUID.randomUUID().toString(),
+            userId = new.userId,
             marketingName = new.marketingName,
             retailPrice = new.retailPrice,
             sku = new.sku,
@@ -39,22 +42,22 @@ class BagService(private val database: CoroutineDatabase) : GenericService<BagDt
         bag.id
     }
 
-    override suspend fun getAll(): List<Bag> = withContext(Dispatchers.IO) {
-        bagCollection.find().toList()
+    override suspend fun getAll(userId: String): List<Bag> = withContext(Dispatchers.IO) {
+        bagCollection.find(Bag::userId eq userId).toList()
     }
 
-    suspend fun getAllByIds(ids: List<String>): List<Bag> = withContext(Dispatchers.IO) {
-        bagCollection.find(Bag::id `in` ids ).toList()
+    suspend fun getAllByIds(userId: String, ids: List<String>): List<Bag> = withContext(Dispatchers.IO) {
+        bagCollection.find(and(Bag::userId eq userId,Bag::id `in` ids) ).toList()
     }
 
 
-    override suspend fun getOneById(id: String): Bag? = withContext(Dispatchers.IO) {
-        val bag = bagCollection.findOneById(id)
+    override suspend fun getOneById(userId : String, id: String): Bag? = withContext(Dispatchers.IO) {
+        val bag = bagCollection.findOne(and(Bag::userId eq userId, Bag::id eq id))
         bag
     }
 
-    override suspend fun updateOneById(id: String, updated: BagDto): Boolean = withContext(Dispatchers.IO) {
-        val existingBag = bagCollection.findOneById(id)
+    override suspend fun updateOneById(userId: String, id: String, updated: BagDto): Boolean = withContext(Dispatchers.IO) {
+        val existingBag = bagCollection.findOne(and(Bag::userId eq userId, Bag::id eq id))
         if (existingBag != null) {
             val updatedBag = existingBag.copy(
                 marketingName = updated.marketingName ?: existingBag.marketingName,
@@ -83,8 +86,8 @@ class BagService(private val database: CoroutineDatabase) : GenericService<BagDt
         }
     }
 
-    override suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {
-        val result = bagCollection.deleteOneById(id)
+    override suspend fun deleteOneById(userId : String, id: String): Boolean = withContext(Dispatchers.IO) {
+        val result = bagCollection.deleteOne(and(Bag::userId eq userId, Bag::id eq id))
         result.wasAcknowledged()
     }
 

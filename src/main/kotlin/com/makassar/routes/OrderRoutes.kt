@@ -19,12 +19,11 @@ fun Application.ordersRoutes(
                 post("/orders") {
                     try {
                         val order = call.receive<OrderDto>()
-                        if(order.customerId != null){
-                            val id = orderService.createOne(order)
-                            call.respond(HttpStatusCode.Created, mapOf("id" to id) )
-                        }else call.respond(HttpStatusCode.BadRequest, mapOf("err" to "Customer Id cannot be null"))
+                        if(order.customerId == null) return@post call.respond(HttpStatusCode.BadRequest, "Customer Id was not specified!")
+                        if(order.userId == null) return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
 
-
+                        val id = orderService.createOne(order)
+                        call.respond(HttpStatusCode.Created, mapOf("id" to id) )
                     }
                     catch (e : Exception){
                         call.respond(HttpStatusCode.BadRequest, mapOf("err" to e.toString()))
@@ -32,11 +31,30 @@ fun Application.ordersRoutes(
 
                 }
 
-                get("/orders/{id}") {
+                get("/tenant/{tenantId}/orders/{id}") {
 
                     try {
-                        val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val order = orderService.getOneById(id)
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenant ID not found")
+                        val id = call.parameters["id"] ?: throw IllegalArgumentException("order ID not found")
+
+                        val order = orderService.getOneById(userId, id)
+                        if (order != null) return@get call.respond(order)
+
+                        call.respond(HttpStatusCode.NotFound)
+
+                    } catch (e: IllegalArgumentException) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
+                    }catch (e : Exception){
+                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
+                    }
+                }
+
+                get("/tenant/{tenantId}/orders/{id}/with-bags-detailed") {
+
+                    try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenant ID not found")
+                        val id = call.parameters["id"] ?: throw IllegalArgumentException("order ID not found")
+                        val order = orderService.getOrderWithBagsDetailed(userId,id)
                         if (order != null) {
                             return@get call.respond(order)
                         }
@@ -49,26 +67,10 @@ fun Application.ordersRoutes(
                     }
                 }
 
-                get("/orders/{id}/with-bags-detailed") {
-
+                get("/tenant/{tenantId}/orders") {
                     try {
-                        val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val order = orderService.getOrderWithBagsDetailed(id)
-                        if (order != null) {
-                            return@get call.respond(order)
-                        }
-                        call.respond(HttpStatusCode.NotFound)
-
-                    } catch (e: IllegalArgumentException) {
-                        call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
-                    }catch (e : Exception){
-                        call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
-                    }
-                }
-
-                get("/orders") {
-                    try {
-                        val orders = orderService.getAll()
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenant ID not found")
+                        val orders = orderService.getAll(userId)
                         if (orders.isEmpty()) {
                             call.respond("No orders found")
                         }
@@ -79,10 +81,11 @@ fun Application.ordersRoutes(
                 }
 
 
-                get("/orders-overviews/{id}") {
+                get("/tenant/{tenantId}/orders-overviews/{id}") {
                     try {
-                        val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest, "No ID found")
-                        val order = orderService.getOrderOverviewById(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+                        val userId = call.parameters["userId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "userId not found")
+                        val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest, "order ID not found")
+                        val order = orderService.getOrderOverviewById(userId,id) ?: return@get call.respond(HttpStatusCode.NotFound)
 
                         call.respond(HttpStatusCode.OK, mapOf("order" to order))
                     } catch (e : Exception){
@@ -90,9 +93,10 @@ fun Application.ordersRoutes(
                     }
                 }
 
-                get("/orders-overviews") {
+                get("/tenant/{tenantId}/orders-overviews") {
                     try {
-                        val orders = orderService.getOverviewsOfOrders()
+                        val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "userId not found")
+                        val orders = orderService.getOverviewsOfOrders(userId)
                         if (orders.isEmpty()) {
                             call.respond("No orders found")
                         }
@@ -103,10 +107,11 @@ fun Application.ordersRoutes(
                 }
 
 
-                get("/orders/{id}/customer-detailed"){
+                get("/tenant/{tenantId}/orders/{id}/customer-detailed"){
                     try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("userId not found")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val order = orderService.getOrderWithCustomerDetailed(id)
+                        val order = orderService.getOrderWithCustomerDetailed(userId, id)
                             ?: return@get call.respond(HttpStatusCode.NotFound,"Order not found")
 
                         call.respond(HttpStatusCode.OK, order)
@@ -115,10 +120,11 @@ fun Application.ordersRoutes(
                     }
                 }
 
-                get("/orders/{id}/fully-detailed"){
+                get("/tenant/{tenantId}/orders/{id}/fully-detailed"){
                     try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("userId not found")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val order = orderService.getOrderFullyDetailedById(id)
+                        val order = orderService.getOrderFullyDetailedById(userId, id)
                             ?: return@get call.respond(HttpStatusCode.NotFound,"Order not found")
 
                         call.respond(HttpStatusCode.OK, order)
@@ -128,11 +134,12 @@ fun Application.ordersRoutes(
 
                 }
 
-                put("/orders/{id}") {
+                put("/tenant/{tenantId}/orders/{id}") {
                     try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("userId not found")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val order = call.receive<OrderDto>()
-                        orderService.updateOneById(id, order).let {
+                        orderService.updateOneById(userId, id, order).let {
                             val result =  if(it)  mapOf("id" to id)  else mapOf("err" to "Order with id $id not found")
                             call.respond(HttpStatusCode.OK,result)
                         }
@@ -145,10 +152,11 @@ fun Application.ordersRoutes(
 
                 }
 
-                delete("/orders/{id}") {
+                delete("/tenant/{tenantId}/orders/{id}") {
                     try {
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("userId not found")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        orderService.deleteOneById(id).let {
+                        orderService.deleteOneById(userId, id).let {
                             val result =  if(it)  mapOf("id" to id)  else mapOf("err" to "Order with id $id not found")
                             call.respond(HttpStatusCode.OK, result)
                         }
@@ -161,12 +169,13 @@ fun Application.ordersRoutes(
                 }
 
 
-                get("/orders/{orderId}/add-bag/{bagId}/{quantity}") {
+                get("/tenant/{tenantId}/orders/{orderId}/add-bag/{bagId}/{quantity}") {
                     try {
-                        val orderId = call.parameters["orderId"] ?: throw IllegalArgumentException("No ID found")
-                        val bagId = call.parameters["bagId"] ?: throw IllegalArgumentException("No quantity found")
+                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("userId not found")
+                        val orderId = call.parameters["orderId"] ?: throw IllegalArgumentException("orderId not found")
+                        val bagId = call.parameters["bagId"] ?: throw IllegalArgumentException("No bagId found")
                         val quantity = call.parameters["quantity"] ?: throw IllegalArgumentException("No quantity found")
-                        orderService.addBagToOrder(orderId,bagId,quantity).let {
+                        orderService.addBagToOrder(userId, orderId,bagId,quantity).let {
                             val result =  if(it)  "Successfully modified order with id $orderId"  else "Order with id $orderId not found"
                             call.respond(HttpStatusCode.OK,result)
                         }

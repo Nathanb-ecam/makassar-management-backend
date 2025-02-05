@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Price(
+    val userId: String? = null,
     val finalPrice: String? = null,
     val alreadyPaid: String? = null,
     val deliveryCost: String? = null,

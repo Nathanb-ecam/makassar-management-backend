@@ -41,6 +41,7 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         val currentOrderNumber = getNextOrder()
         val order = Order(
             id = UUID.randomUUID().toString(),
+            userId = new.userId,
             customerId = new.customerId,
             orderNumber = currentOrderNumber.toString(),
             createdLocation = new.createdLocation,
@@ -57,14 +58,13 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         order.id
     }
 
-    override suspend fun getAll(): List<Order> = withContext(Dispatchers.IO) {
-        orderCollection.find().toList()
+    override suspend fun getAll(userId : String): List<Order> = withContext(Dispatchers.IO) {
+        orderCollection.find(User::id eq userId).toList()
     }
 
 
-    suspend fun getOrderWithBagsDetailed(orderId: String): OrderBagDetailed? {
-
-        val order = orderCollection.findOneById(orderId) ?: return null
+    suspend fun getOrderWithBagsDetailed(userId : String, orderId: String): OrderBagDetailed? {
+        val order = orderCollection.findOne(and(Order::id eq orderId, Order::userId eq userId)) ?: return null
 
         val bagIds = order.bags?.keys?.toList() ?: emptyList()
 
@@ -77,8 +77,8 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         return orderWithDetails
     }
 
-    override suspend fun updateOneById(id: String, updated: OrderDto): Boolean = withContext(Dispatchers.IO) {
-        val existingOrder = orderCollection.findOneById(id) ?: return@withContext false
+    override suspend fun updateOneById(userId : String, orderId: String, updated: OrderDto): Boolean = withContext(Dispatchers.IO) {
+        val existingOrder = orderCollection.findOne(and(Order::id eq orderId, Order::userId eq userId)) ?: return@withContext false
 
         val updatedOrder = existingOrder.copy(
             customerId = updated.customerId ?: existingOrder.customerId,
@@ -91,24 +91,28 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
             plannedDate = updated.plannedDate ?: existingOrder.plannedDate,
             updatedAt = System.currentTimeMillis(),
         )
-        val result = orderCollection.replaceOneById(id, updatedOrder)
+        val result = orderCollection.replaceOne(
+            and(Order::id eq orderId, Order::userId eq userId),
+            updatedOrder
+        )
         result.wasAcknowledged()
+
 
     }
 
-    override suspend fun getOneById(id: String): Order? = withContext(Dispatchers.IO) {
-        val order = orderCollection.findOneById(id)
+    override suspend fun getOneById(userId : String, orderId: String): Order? = withContext(Dispatchers.IO) {
+        val order = orderCollection.findOne(and(Order::id eq orderId, Order::userId eq userId))
         order
     }
 
 
-    override suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {
-        val result = orderCollection.deleteOneById(id)
+    override suspend fun deleteOneById(userId : String, orderId: String): Boolean = withContext(Dispatchers.IO) {
+        val result = orderCollection.deleteOneById(and(Order::userId eq userId,Order::id eq orderId))
         result.wasAcknowledged()
     }
 
-    suspend fun addBagToOrder(orderId: String, bagId: String, quantity: String): Boolean = withContext(Dispatchers.IO) {
-        val existingOrder = orderCollection.findOneById(orderId) ?: return@withContext false
+    suspend fun addBagToOrder(userId: String,orderId: String, bagId: String, quantity: String): Boolean = withContext(Dispatchers.IO) {
+        val existingOrder = orderCollection.findOne(and(Order::userId eq userId, Order::id eq orderId)) ?: return@withContext false
 
 
         val updatedBags = existingOrder.bags?.toMutableMap() ?: mutableMapOf()
@@ -127,14 +131,15 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
             updatedAt = System.currentTimeMillis()
         )
 
-        val result = orderCollection.replaceOneById(orderId, updatedOrder)
+        val result = orderCollection.replaceOne(and(Order::id eq orderId, Order::userId eq userId), updatedOrder)
         return@withContext result.wasAcknowledged()
 
     }
 
 
-    suspend fun getOverviewsOfOrders(): List<OrderOverview> = withContext(Dispatchers.IO) {
+    suspend fun getOverviewsOfOrders(userId: String): List<OrderOverview> = withContext(Dispatchers.IO) {
         return@withContext orderCollection.aggregate<OrderOverview>(
+            match(Order::userId eq userId),
             lookup(from = "customer", localField = "customerId", foreignField = "_id", newAs = "customer"),
             unwind("\$customer"),
             project(
@@ -150,9 +155,9 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         ).toList()
     }
 
-    suspend fun getOrderOverviewById(id : String) : OrderOverview? = withContext(Dispatchers.IO){
+    suspend fun getOrderOverviewById(userId : String, orderId : String) : OrderOverview? = withContext(Dispatchers.IO){
         return@withContext orderCollection.aggregate<OrderOverview>(
-            match(Order::id eq id ),
+            match(and(Order::id eq orderId, Order::userId eq userId )),
             lookup(from = "customer", localField = "customerId", foreignField = "_id", newAs = "customer"),
             unwind("\$customer"),
             project(
@@ -169,9 +174,9 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
     }
 
 
-    suspend fun getOrderWithCustomerDetailed(id: String): OrderCustomerDetailed? = withContext(Dispatchers.IO) {
+    suspend fun getOrderWithCustomerDetailed(userId: String, orderId: String): OrderCustomerDetailed? = withContext(Dispatchers.IO) {
         return@withContext orderCollection.aggregate<OrderCustomerDetailed>(
-            match(Order::id eq id),
+            match(and(Order::id eq orderId, Order::userId eq userId )),
             lookup(from = "customer", localField = "customerId", foreignField = "_id", newAs = "customer"),
             unwind("\$customer"),
             project(
@@ -189,10 +194,10 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
     }
 
 
-    suspend fun getOrderFullyDetailedById(id: String): OrderFullyDetailed? = withContext(Dispatchers.IO) {
+    suspend fun getOrderFullyDetailedById(userId: String, orderId: String): OrderFullyDetailed? = withContext(Dispatchers.IO) {
         try {
             val orderCustomerDetailed = orderCollection.aggregate<OrderCustomerDetailed>(
-                match(Order::id eq id),
+                match(and(Order::id eq orderId, Order::userId eq userId )),
                 lookup(from = "customer", localField = "customerId", foreignField = "_id", newAs = "customer"),
                 unwind("\$customer"),
                 project(
@@ -206,7 +211,7 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
                     OrderCustomerDetailed::bags from "\$bags",
                     OrderCustomerDetailed::plannedDate from "\$plannedDate",
                 )
-            ).toList().firstOrNull() ?: throw NoSuchElementException("Order with $id not found")
+            ).toList().firstOrNull() ?: throw NoSuchElementException("Order with $orderId not found")
 
 
             val bagIds = orderCustomerDetailed.bags?.keys?.toSet() ?: emptySet()

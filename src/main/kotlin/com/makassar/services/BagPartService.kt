@@ -3,9 +3,12 @@ import com.makassar.dto.BagPartDto
 import com.makassar.entities.BagPart
 import com.makassar.services.GenericService
 import com.makassar.utils.ServiceUtils
+import com.mongodb.client.model.Filters.and
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.litote.kmongo.MongoOperator
 import org.litote.kmongo.coroutine.CoroutineDatabase
+import org.litote.kmongo.eq
 import java.util.UUID
 
 
@@ -15,6 +18,7 @@ class BagPartService(private val database: CoroutineDatabase) : GenericService<B
     override suspend fun createOne(new: BagPartDto): String = withContext(Dispatchers.IO) {
         val bagItem = BagPart(
             id = UUID.randomUUID().toString(),
+            userId = new.userId,
             marketingName = new.marketingName,
             singleItemPrice = new.singleItemPrice,
             ref = new.ref,
@@ -33,18 +37,18 @@ class BagPartService(private val database: CoroutineDatabase) : GenericService<B
         bagItem.id
     }
 
-    override suspend fun getAll(): List<BagPart> = withContext(Dispatchers.IO) {
-        bagPartsCollection.find().toList()
+    override suspend fun getAll(userId : String): List<BagPart> = withContext(Dispatchers.IO) {
+        bagPartsCollection.find(BagPart::userId eq userId).toList()
     }
 
 
-    override suspend fun getOneById(id: String): BagPart? = withContext(Dispatchers.IO) {
-        val bagItem = bagPartsCollection.findOneById(id)
+    override suspend fun getOneById(userId: String, id: String): BagPart? = withContext(Dispatchers.IO) {
+        val bagItem = bagPartsCollection.findOneById(and(BagPart::userId eq userId, BagPart::id eq id))
         bagItem
     }
 
-    override suspend fun updateOneById(id: String, updated: BagPartDto): Boolean = withContext(Dispatchers.IO) {
-        val existingBagItem = bagPartsCollection.findOneById(id)
+    override suspend fun updateOneById(userId: String, id: String, updated: BagPartDto): Boolean = withContext(Dispatchers.IO) {
+        val existingBagItem = bagPartsCollection.findOne(and(BagPart::id eq id, BagPart::userId eq userId))
 
         if (existingBagItem != null) {
             val updatedBagItem = existingBagItem.copy(
@@ -69,8 +73,8 @@ class BagPartService(private val database: CoroutineDatabase) : GenericService<B
     }
 
 
-    override suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {
-        val result = bagPartsCollection.deleteOneById(id)
+    override suspend fun deleteOneById(userId: String, id: String): Boolean = withContext(Dispatchers.IO) {
+        val result = bagPartsCollection.deleteOneById(and(BagPart::userId eq userId, BagPart::id eq id))
         result.wasAcknowledged()
     }
 

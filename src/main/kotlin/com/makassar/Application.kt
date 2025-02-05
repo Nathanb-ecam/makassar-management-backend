@@ -5,15 +5,10 @@ import AuthService
 import BagPartService
 import CustomerService
 import OrderService
-import BagPartMaterialService
 import BagService
-import ColorService
-import MaterialTypeService
 import UserService
-import bagPartMaterialRoutes
 import bagRoutes
 import bagSubPartRoutes
-import colorRoutes
 import com.makassar.auth.JWTConfig
 import com.makassar.plugins.configureCORS
 import com.makassar.storage.DatabaseConfig
@@ -26,7 +21,6 @@ import customersRoutes
 
 import io.ktor.server.application.*
 import io.ktor.server.config.*
-import materialTypeRoutes
 
 import ordersRoutes
 import usersRoutes
@@ -60,9 +54,7 @@ fun Application.module() {
     val customerService = CustomerService(mongoDatabase)
     val bagService = BagService(mongoDatabase)
     val bagItemService = BagPartService(mongoDatabase)
-    val bagPartMaterialService = BagPartMaterialService(mongoDatabase)
-    val materialTypeService = MaterialTypeService(mongoDatabase)
-    val colorService = ColorService(mongoDatabase)
+
 
     val userService = UserService(mongoDatabase)
     val authService = AuthService(mongoDatabase)
@@ -76,9 +68,5 @@ fun Application.module() {
     customersRoutes(customerService)
     bagRoutes(bagService)
     bagSubPartRoutes(bagItemService)
-    bagPartMaterialRoutes(bagPartMaterialService)
-    materialTypeRoutes(materialTypeService)
-    colorRoutes(colorService)
-
 
 }
