@@ -16,6 +16,7 @@ import com.makassar.plugins.configureRouting
 import com.makassar.plugins.configureSecurity
 import com.makassar.plugins.configureSerialization
 import com.makassar.routes.authRoutes
+import com.makassar.utils.MailService
 import com.typesafe.config.ConfigFactory
 import customersRoutes
 
@@ -48,6 +49,7 @@ fun Application.module() {
     configureRouting()
     configureCORS()
 
+    MailService.init(environment)
     val mongoDatabase = DatabaseConfig.getDatabase(environment)
 
     val orderService = OrderService(mongoDatabase)
@@ -61,7 +63,8 @@ fun Application.module() {
 
 
 
-    authRoutes(jwtConfig,authService, accessTokenLifeTime, refreshTokenLifeTime)
+
+    authRoutes(jwtConfig,authService,  accessTokenLifeTime, refreshTokenLifeTime)
     usersRoutes(userService)
 
     ordersRoutes(orderService)

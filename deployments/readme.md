@@ -1,3 +1,7 @@
+# Backend application
+
+application.yaml template 
+```yaml
 ktor:
   application:
     modules:
@@ -10,13 +14,19 @@ ktor:
   environment:
     allowedUploadFileTypes: "png,jpeg,jpg"
 
+    mail:
+      smtpHost: "smtp.gmail.com"
+      smtpPort: "587"
+      emailUsername: ""
+      emailPassword: ""
+
     database:
       mongo:
-        user: "$MONGO_USER:mongo-makassar-mgmt-user"
-        password: "$MONGO_PASSWORD:mongo-makassar-mgmt-password"
-        host: "$MONGO_HOST:mongoDB"
+        user: "$MONGO_USER:db_username"
+        password: "$MONGO_PASSWORD:db_password"
+        host: "$MONGO_HOST:localhost"
         port: "$MONGO_PORT:27017"
-        dbname: "$MONGO_DBNAME:makassar-management-db-prod"
+        dbname: "$MONGO_DBNAME:db_name"
 
     jwt:
       secret: "$JWT_SECRET:secret"
@@ -27,3 +37,5 @@ ktor:
         lifetime: "$JWT_ACCESS_LIFETIME:600000000"
       refreshToken:
         lifetime: "$JWT_REFRESH_LIFETIME:3600000"
+
+```

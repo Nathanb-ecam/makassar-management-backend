@@ -2,6 +2,7 @@
 import com.makassar.dto.UserDto
 import com.makassar.entities.User
 import com.makassar.services.GenericService
+import com.makassar.utils.PasswordUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bson.types.ObjectId
@@ -9,10 +10,10 @@ import org.litote.kmongo.coroutine.CoroutineDatabase
 import java.util.UUID
 
 
-class UserService(private val database: CoroutineDatabase) : GenericService<UserDto,User> {
+class UserService(private val database: CoroutineDatabase) {
     private val userCollection = database.getCollection<User>()
 
-    override suspend fun createOne(new: UserDto): String = withContext(Dispatchers.IO) {
+    suspend fun createOne(new: UserDto): String = withContext(Dispatchers.IO) {
 
         val user = User(
             id = UUID.randomUUID().toString(),
@@ -28,23 +29,23 @@ class UserService(private val database: CoroutineDatabase) : GenericService<User
         user.id
     }
 
-    override suspend fun getAll(): List<User> = withContext(Dispatchers.IO) {
+    suspend fun getAll(): List<User> = withContext(Dispatchers.IO) {
         userCollection.find().toList()
     }
 
 
-    override suspend fun getOneById(id: String): User? = withContext(Dispatchers.IO) {
+    suspend fun getOneById(id: String): User? = withContext(Dispatchers.IO) {
         val user = userCollection.findOneById(id)
         user
     }
 
-    override suspend fun updateOneById(id: String, updated: UserDto): Boolean = withContext(Dispatchers.IO) {
+    suspend fun updateOneById(id: String, updated: UserDto): Boolean = withContext(Dispatchers.IO) {
         val existingUser = userCollection.findOneById(id)
         if (existingUser != null) {
             val updatedUser = existingUser.copy(
                 username = updated.username ?: existingUser.username,
                 mail = updated.mail ?: existingUser.mail,
-                passwordHash = updated.password ?: existingUser.passwordHash,
+                passwordHash = updated.password?.let { PasswordUtils.hashPassword(it) } ?: existingUser.passwordHash,
                 updatedAt = System.currentTimeMillis(),
 
             )
@@ -56,7 +57,7 @@ class UserService(private val database: CoroutineDatabase) : GenericService<User
         }
     }
 
-    override suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun deleteOneById(id: String): Boolean = withContext(Dispatchers.IO) {
         val result = userCollection.deleteOneById(id)
         result.wasAcknowledged()
     }

@@ -38,6 +38,8 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:$ktor_version")
     implementation("io.ktor:ktor-server-auth-jwt:$ktor_version")
     implementation("org.mongodb:bson:$mongo_version")
+    implementation("org.eclipse.angus:angus-mail:2.0.2")
+    implementation("at.favre.lib:bcrypt:0.10.2")
     //implementation("io.ktor:ktor-serialization-jackson-jvm")
     implementation("io.ktor:ktor-server-host-common-jvm")
     implementation("io.ktor:ktor-server-auth-jvm")

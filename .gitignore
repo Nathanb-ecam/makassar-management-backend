@@ -53,3 +53,7 @@ Thumbs.db
 .DS_Store
 ehthumbs.db
 desktop.ini
+
+
+mongo-data
+src/main/resources/application.yaml
