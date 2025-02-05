@@ -1,0 +1,55 @@
+### Kotlin/Java ###
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+*.ipr
+*.iws
+*.swp
+
+### Gradle ###
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea/
+*.log
+*.idea_modules/
+*.DS_Store
+*.env
+
+### Ktor Specific ###
+/logs/
+config/*.conf
+config/*.json
+config/*.yml
+secrets/
+secrets/*
+/storage/
+
+### Dependency Caches ###
+/node_modules/
+/.yarn/
+.yarnrc
+.pnpm-debug.log
+npm-debug.log
+yarn-error.log
+
+### Docker ###
+.dockerignore
+docker-compose.override.yml
+*.pid
+
+### MongoDB ###
+/data/db/
+/dump/
+mongod.lock
+
+### OS Specific ###
+Thumbs.db
+.DS_Store
+ehthumbs.db
+desktop.ini
