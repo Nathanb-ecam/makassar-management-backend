@@ -21,20 +21,22 @@ fun Application.bagSubPartRoutes(
         authenticate("access-jwt"){
             route("/api"){
 
-                post("/bag-parts"){
+                post("/{tenantId}/bag-parts"){
                     try{
+                        val userId = call.parameters["tenantId"] ?: return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val bagPart = call.receive<BagPartDto>()
                         if(bagPart.family == null) return@post call.respond(HttpStatusCode.BadRequest,"Bag part requires property 'family'")
                         if(bagPart.userId == null) return@post call.respond(HttpStatusCode.BadRequest,"tenantId was not specified")
 
-                        val id = bagPartService.createOne(bagPart)
+                        val id = bagPartService.createOne(userId, bagPart)
                         call.respond(HttpStatusCode.OK, mapOf("bagPartId" to id))
                     }catch (e: Exception){
                         call.respond(HttpStatusCode.BadRequest,e.toString())
                     }
                 }
 
-                post("/bag-parts/withImages"){
+                post("/{tenantId}/bag-parts/withImages"){
+                    val userId = call.parameters["tenantId"] ?: return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                     val multipart = call.receiveMultipart()
                     var bagSubPartDto: BagPartDto? = null
                     val fileParts = mutableListOf<PartData.FileItem>()
@@ -60,28 +62,30 @@ fun Application.bagSubPartRoutes(
 
                     if(bagSubPartDto!!.family == null) return@post call.respond(HttpStatusCode.BadRequest, "BagSubPart requires property 'family'")
 
-                    if(bagSubPartDto!!.userId == null) return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified")
+
+                    //if(bagSubPartDto!!.userId == null) return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified")
 
 
-                    val fileUploadResult = FileProcessing.handleFileUploads("bags-subparts",fileParts,allowedFileTypesString)
+                    val fileUploadResult = FileProcessing.handleFileUploads("$userId/bags-subparts",fileParts,allowedFileTypesString)
                     val uploadedImagesUrls = fileUploadResult["imageUrls"]?.toList()
 
 
                     bagSubPartDto = bagSubPartDto!!.copy(
                         imageUrls =  uploadedImagesUrls,
+                        userId = userId
                     )
 
-                    val id = bagPartService.createOne(bagSubPartDto!!)
+                    val id = bagPartService.createOne(userId, bagSubPartDto!!)
                     if(fileUploadResult["fileExtensionNotAllowed"]!!.isNotEmpty()) call.respond(HttpStatusCode.Created, mapOf( "bagSubPartId" to id, "errors" to "File extensions not allowed : ${fileUploadResult["fileExtensionNotAllowed"]}"))
                     else call.respond(HttpStatusCode.Created, mapOf("bagSubPartId" to id))
                 }
 
 
 
-                get("/tenant/{tenantId}/bag-parts/{id}") {
+                get("/{tenantId}/bag-parts/{id}") {
 
                     try {
-                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val bagPart = bagPartService.getOneById(userId, id)
                         if (bagPart != null) {
@@ -96,9 +100,9 @@ fun Application.bagSubPartRoutes(
                     }
                 }
 
-                get("/tenant/{tenantId}/bag-parts") {
+                get("/{tenantId}/bag-parts") {
                     try {
-                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val BagPart = bagPartService.getAll(userId)
                         if (BagPart.isEmpty()) {
                             call.respond("No BagPart found")
@@ -109,9 +113,9 @@ fun Application.bagSubPartRoutes(
                     }
                 }
 
-                put("/tenant/{tenantId}/bag-parts/{id}") {
+                put("/{tenantId}/bag-parts/{id}") {
                     try {
-                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val userId = call.parameters["tenantId"] ?: return@put call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val BagPart = call.receive<BagPartDto>()
                         bagPartService.updateOneById(userId, id, BagPart).let {
@@ -127,9 +131,9 @@ fun Application.bagSubPartRoutes(
 
                 }
 
-                delete("/tenant/{tenantId}/bag-parts/{id}") {
+                delete("/{tenantId}/bag-parts/{id}") {
                     try {
-                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val userId = call.parameters["tenantId"] ?: return@delete call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         bagPartService.deleteOneById(userId, id).let {
                             val result =  if(it)  "Successfully deleted BagPart with id $id"  else "BagPart with id $id not found"

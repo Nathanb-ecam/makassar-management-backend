@@ -5,11 +5,13 @@ import com.makassar.auth.JWTConfig
 import com.makassar.dto.UserDto
 import com.makassar.dto.requests.ConfirmUserRequest
 import com.makassar.dto.requests.LoginRequest
+import com.makassar.utils.SecurityUtils
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlin.random.Random
 
 
 fun Application.authRoutes(
@@ -42,7 +44,7 @@ fun Application.authRoutes(
                         )
                     )
 
-                    return@post call.respond(hashMapOf("accessToken" to accessToken))
+                    return@post call.respond(hashMapOf("accessToken" to accessToken, "tenantId" to matchedUser.id))
                 }catch(e: Exception){
                     call.respond(HttpStatusCode.BadRequest,e.toString())
                 }
@@ -50,21 +52,47 @@ fun Application.authRoutes(
 
             post("/register"){
                 val user = call.receive<UserDto>()
-                if(user.mail == null || user.password == null) return@post call.respond(HttpStatusCode.BadRequest,"user not found, create one")
+                if(user.mail == null || user.password == null) return@post call.respond(HttpStatusCode.BadRequest,"Missing fields: username and/or password ")
 
-                authService.createPendingUser(user)
+                val alreadyRegisterd = authService.checkUserAlreadyRegistered(user)
+                if(alreadyRegisterd) return@post call.respond(HttpStatusCode.BadRequest, "User already exists")
+
+                val otp = SecurityUtils.generateOTP()
+                println("OTP " +otp)
+                val mailSent = authService.sendMailConfirmation(user, otp)
+                if(!mailSent) return@post call.respond(HttpStatusCode.BadRequest,"Error trying to sent the confirmation mail.")
+                val savedPendingUser = authService.createPendingUser(user, otp)
+                if(!savedPendingUser) return@post call.respond(HttpStatusCode.BadRequest,"Pending user was not created")
                 return@post call.respond(HttpStatusCode.OK, "Email confirmation sent")
             }
 
-            post("/verify") {
-                //val mail = call.parameters["mail"] ?: return@post call.respond(HttpStatusCode.BadRequest,"Mail was not provided")
-                //val otp = call.parameters["otp"] ?: return@post call.respond(HttpStatusCode.BadRequest,"OTP was not provided")
-                val  parameters = call.receiveParameters()
-                val mail = parameters["mail"] ?: return@post call.respond(HttpStatusCode.BadRequest, "Mail was not provided")
-                val otp = parameters["otp"] ?: return@post call.respond(HttpStatusCode.BadRequest, "OTP was not provided")
+            get("/verify") {
+                val mail = call.parameters["mail"] ?: return@get call.respond(HttpStatusCode.BadRequest, "Mail was not provided")
+                val otp = call.parameters["otp"] ?: return@get call.respond(HttpStatusCode.BadRequest, "OTP was not provided")
 
                 val created = authService.createUserFromPendingUser(mail, otp)
-                return@post call.respond(HttpStatusCode.OK, created)
+                if (created) {
+                    val htmlResponse = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Account Confirmation</title>
+            </head>
+            <body>
+                <h1>Account Successfully Created!</h1>
+                <p>Your account has been confirmed and created successfully.</p>
+                <p><a href="/">Go back to the homepage</a></p>
+            </body>
+            </html>
+        """.trimIndent()
+
+                    call.respondText(htmlResponse, contentType = ContentType.Text.Html)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "Something went wrong :( ")
+                }
+
             }
 
             /*        authenticate("refresh-jwt"){

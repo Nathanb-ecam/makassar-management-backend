@@ -13,11 +13,11 @@ import java.util.UUID
 class CustomerService(private val database: CoroutineDatabase) : GenericService<CustomerDto,Customer> {
     private val customerCollection = database.getCollection<Customer>()
 
-    override suspend fun createOne(new: CustomerDto): String = withContext(Dispatchers.IO) {
+    override suspend fun createOne(userId: String, new: CustomerDto): String = withContext(Dispatchers.IO) {
 
         val customer = Customer(
             id = UUID.randomUUID().toString(),
-            userId = new.userId,
+            userId = userId,
             name = new.name,
             mail = new.mail,
             phone = new.phone,

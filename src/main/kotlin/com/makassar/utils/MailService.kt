@@ -15,19 +15,24 @@ object MailService {
     private lateinit var smtpPort: String
     private lateinit var emailUsername: String
     private lateinit var emailPassword: String
+    private lateinit var backendIP : String
+    private lateinit var backendPort : String
 
     fun init(environment: ApplicationEnvironment) {
         smtpHost = environment.config.propertyOrNull("ktor.appConfig.environment.mail.smtpHost")?.getString() ?: "smtp.gmail.com"
         smtpPort = environment.config.propertyOrNull("ktor.appConfig.environment.mail.smtpPort")?.getString() ?: "587"
         emailUsername = environment.config.propertyOrNull("ktor.appConfig.environment.mail.emailUsername")?.getString() ?: ""
         emailPassword = environment.config.propertyOrNull("ktor.appConfig.environment.mail.emailPassword")?.getString() ?: ""
-        logger.info("Connecting to smtp: $smtpHost:$smtpPort")
-        logger.info("SMTP USER: $emailUsername:$emailPassword")
+        backendIP = environment.config.propertyOrNull("ktor.deployment.domain")?.getString() ?: "localhost"
+        backendPort = environment.config.propertyOrNull("ktor.deployment.port")?.getString() ?: "8080"
+        logger.info("SMTP USER: $emailUsername")
     }
 
-    fun sendOtpEmail(toEmail: String, otp: String) {
+    fun sendOtpEmail(toEmail: String, otp: String) : Boolean {
         //val verificationLink = "http://localhost:8080/api/verify?mail=$toEmail&otp=$otp"
-        val verificationLink =  "http://localhost:8080/api/verify"
+        //val verificationLink =  "http://localhost:8080/api/verify"
+        val verificationLink =  "http://$backendIP:$backendPort/api/verify"
+        logger.info("Verification link: $verificationLink")
 
         val properties = Properties().apply {
             put("mail.smtp.auth", "true")
@@ -52,14 +57,12 @@ object MailService {
                 <html>
                     <body>
                         <h2>Verify Your Account</h2>
-                        <p>Click the button below to verify your account:</p>
-                        <form method="post" action="$verificationLink">
-                            <input type="hidden" name="mail" value="$toEmail" />
-                            <input type="hidden" name="otp" value="$otp" />                                                
-                            <button type="submit">
-                                Verify Your Account
-                            </button>
-                        </form>                        
+                        <p>Click the button below to verify your account:</p>          
+                       <a href="$verificationLink?mail=$toEmail&otp=$otp"
+                          style="background-color:#28a745;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;">
+                          Verify Your Account
+                       </a>
+
                         <p>If you didn't request this, please ignore this email.</p>
                     </body>
                 </html>
@@ -68,10 +71,19 @@ object MailService {
                 setContent(htmlContent, "text/html; charset=utf-8")
             }
 
+ /*           <form method="post" action="$verificationLink">
+            <input type="hidden" name="mail" value="$toEmail" />
+            <input type="hidden" name="otp" value="$otp" />
+            <button type="submit">Verify</button>
+            </form>*/
+
+
             Transport.send(message)
             println("Verification email sent to $toEmail")
+            return true
         } catch (e: MessagingException) {
             e.printStackTrace()
+            return false
         }
     }
 }

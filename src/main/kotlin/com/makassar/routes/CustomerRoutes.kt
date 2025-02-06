@@ -15,13 +15,15 @@ fun Application.customersRoutes(
     routing {
         authenticate("access-jwt") {
             route("/api") {
-                post("/customers") {
+                post("/{tenantId}/customers") {
                     try {
+                        val userId = call.parameters["tenantId"] ?: return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val customer = call.receive<CustomerDto>()
-                        if(customer.name == null) return@post call.respond(HttpStatusCode.BadRequest, "Customer name was not specified!")
-                        if(customer.userId == null) return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
 
-                        val newCustomer = customerService.createOne(customer)
+                        if(customer.name == null) return@post call.respond(HttpStatusCode.BadRequest, "Customer name was not specified!")
+
+
+                        val newCustomer = customerService.createOne(userId, customer)
                         call.respond(HttpStatusCode.Created, mapOf("id" to newCustomer))
 
                     }
@@ -31,10 +33,10 @@ fun Application.customersRoutes(
 
                 }
 
-                get("/tenant/{tenantId}/customers/{id}") {
+                get("/{tenantId}/customers/{id}") {
 
                     try {
-                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val customer = customerService.getOneById(userId, id)
                         if (customer != null) {
@@ -49,9 +51,9 @@ fun Application.customersRoutes(
                     }
                 }
 
-                get("/tenant/{tenantId}/customers") {
+                get("/{tenantId}/customers") {
                     try {
-                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val customers = customerService.getAll(userId)
                         if (customers.isEmpty()) {
                             call.respond("No customers found")
@@ -62,9 +64,9 @@ fun Application.customersRoutes(
                     }
                 }
 
-                put("/tenant/{tenantId}/customers/{id}") {
+                put("/{tenantId}/customers/{id}") {
                     try {
-                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val userId = call.parameters["tenantId"] ?: return@put call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val customer = call.receive<CustomerDto>()
                         customerService.updateOneById(userId, id, customer).let {
@@ -80,9 +82,9 @@ fun Application.customersRoutes(
 
                 }
 
-                delete("/tenant/{tenantId}/customers/{id}") {
+                delete("/{tenantId}/customers/{id}") {
                     try {
-                        val userId = call.parameters["tenantId"] ?: throw IllegalArgumentException("tenantId was not specified")
+                        val userId = call.parameters["tenantId"] ?: return@delete call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         customerService.deleteOneById(userId, id).let {
                             val result =  if(it)  mapOf( "id" to id)  else mapOf("err" to "Customer with id $id not found")

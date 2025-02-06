@@ -1,8 +1,7 @@
 
 import com.makassar.dto.UserDto
 import com.makassar.entities.User
-import com.makassar.services.GenericService
-import com.makassar.utils.PasswordUtils
+import com.makassar.utils.SecurityUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bson.types.ObjectId
@@ -45,7 +44,7 @@ class UserService(private val database: CoroutineDatabase) {
             val updatedUser = existingUser.copy(
                 username = updated.username ?: existingUser.username,
                 mail = updated.mail ?: existingUser.mail,
-                passwordHash = updated.password?.let { PasswordUtils.hashPassword(it) } ?: existingUser.passwordHash,
+                passwordHash = updated.password?.let { SecurityUtils.hashPassword(it) } ?: existingUser.passwordHash,
                 updatedAt = System.currentTimeMillis(),
 
             )

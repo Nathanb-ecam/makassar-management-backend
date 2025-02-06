@@ -15,10 +15,10 @@ import java.util.UUID
 class BagPartService(private val database: CoroutineDatabase) : GenericService<BagPartDto,BagPart> {
     private val bagPartsCollection = database.getCollection<BagPart>()
 
-    override suspend fun createOne(new: BagPartDto): String = withContext(Dispatchers.IO) {
+    override suspend fun createOne(userId: String, new: BagPartDto): String = withContext(Dispatchers.IO) {
         val bagItem = BagPart(
             id = UUID.randomUUID().toString(),
-            userId = new.userId,
+            userId = userId,
             marketingName = new.marketingName,
             singleItemPrice = new.singleItemPrice,
             ref = new.ref,

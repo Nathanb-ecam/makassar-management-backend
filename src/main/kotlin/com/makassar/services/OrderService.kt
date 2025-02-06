@@ -36,12 +36,12 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         return updatedSequence?.sequenceValue ?: 1
     }
 
-    override suspend fun createOne(new: OrderDto): String = withContext(Dispatchers.IO) {
+    override suspend fun createOne(userId: String, new: OrderDto): String = withContext(Dispatchers.IO) {
 
         val currentOrderNumber = getNextOrder()
         val order = Order(
             id = UUID.randomUUID().toString(),
-            userId = new.userId,
+            userId = userId,
             customerId = new.customerId,
             orderNumber = currentOrderNumber.toString(),
             createdLocation = new.createdLocation,

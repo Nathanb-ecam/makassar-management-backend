@@ -9,7 +9,7 @@ interface GenericService<dtoType,returnType> {
 
     suspend fun getOneById(userId : String, id: String): returnType?
 
-    suspend fun createOne(new: dtoType): String
+    suspend fun createOne(userId : String, new: dtoType): String
 
     suspend fun updateOneById(userId : String, id: String, updated: dtoType): Boolean
 

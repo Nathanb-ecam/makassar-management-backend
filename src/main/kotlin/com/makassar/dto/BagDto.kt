@@ -7,7 +7,7 @@ import java.util.*
 
 @Serializable
 data class BagDto(
-    val userId: String? = null,
+    var userId: String? = null,
     val marketingName: String? = null,
     val retailPrice: String? = null,
     val wholesalePrice: String? = null,
