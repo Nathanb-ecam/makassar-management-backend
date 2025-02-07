@@ -27,7 +27,13 @@ fun Application.authRoutes(
             post("/login") {
                 try{
                     val user : LoginRequest = call.receive<LoginRequest>()
-                    val matchedUser = authService.loginWithMail(user) ?: return@post call.respond(HttpStatusCode.Unauthorized,"User doesn't exist")
+
+                    val matchedUser = authService.loginWithMail(user)
+                    if(matchedUser == null){
+                        val userExists = authService.checkUserMailExists(user.mail)
+                        if(userExists) return@post call.respond(HttpStatusCode.Forbidden, "Password is incorrect")
+                        return@post call.respond(HttpStatusCode.Unauthorized, "No user found, create an account")
+                    }
 
                     val accessToken = jwtConfig.generateToken(mapOf("type" to "access" ),accessTokenLifeTime)
                     val refreshToken = jwtConfig.generateToken(mapOf("type" to "refresh" ),refreshTokenLifeTime)
@@ -55,7 +61,7 @@ fun Application.authRoutes(
                 if(user.mail == null || user.password == null) return@post call.respond(HttpStatusCode.BadRequest,"Missing fields: username and/or password ")
 
                 val alreadyRegisterd = authService.checkUserAlreadyRegistered(user)
-                if(alreadyRegisterd) return@post call.respond(HttpStatusCode.BadRequest, "User already exists")
+                if(alreadyRegisterd) return@post call.respond(HttpStatusCode.BadRequest, "User is already waiting for confirmation.")
 
                 val otp = SecurityUtils.generateOTP()
                 println("OTP " +otp)
@@ -63,7 +69,7 @@ fun Application.authRoutes(
                 if(!mailSent) return@post call.respond(HttpStatusCode.BadRequest,"Error trying to sent the confirmation mail.")
                 val savedPendingUser = authService.createPendingUser(user, otp)
                 if(!savedPendingUser) return@post call.respond(HttpStatusCode.BadRequest,"Pending user was not created")
-                return@post call.respond(HttpStatusCode.OK, "Email confirmation sent")
+                return@post call.respond(HttpStatusCode.OK, "Email confirmation sent !")
             }
 
             get("/verify") {

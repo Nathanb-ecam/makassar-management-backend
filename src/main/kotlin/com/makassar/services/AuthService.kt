@@ -43,6 +43,11 @@ class AuthService(private val database: CoroutineDatabase) {
         return userExists
     }
 
+    suspend fun checkUserMailExists(mail : String) : Boolean{
+        val userExists = userCollection.findOne(User::mail eq mail) != null
+        return userExists
+    }
+
     suspend fun createPendingUser(newUser : UserDto, otp : String) : Boolean = withContext(Dispatchers.IO) {
         try{
             val user = PendingUser(
