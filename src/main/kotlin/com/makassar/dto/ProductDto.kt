@@ -1,12 +1,11 @@
 package com.makassar.dto
 
-import com.makassar.entities.Bag
+import com.makassar.entities.Product
 import kotlinx.serialization.Serializable
-import java.util.*
 
 
 @Serializable
-data class BagDto(
+data class ProductDto(
     var userId: String? = null,
     val marketingName: String? = null,
     val retailPrice: String? = null,
@@ -29,8 +28,8 @@ data class BagDto(
 )
 
 
-fun BagDto.toEntity(id : String): Bag {
-    return Bag(
+fun ProductDto.toEntity(id : String): Product {
+    return Product(
         id = id,
         marketingName = this.marketingName,
         retailPrice = this.retailPrice,
@@ -55,8 +54,8 @@ fun BagDto.toEntity(id : String): Bag {
 
 
 @Serializable
-data class BagWithQuantity(
-    val bag: Bag? = null,
+data class ProductWithQuantity(
+    val Product: Product? = null,
     val quantity : String? = null
 )
 

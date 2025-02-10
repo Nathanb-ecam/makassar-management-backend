@@ -2,13 +2,12 @@ package com.makassar
 
 
 import AuthService
-import BagPartService
+
 import CustomerService
 import OrderService
-import BagService
+import ProductPartService
+import ProductService
 import UserService
-import bagRoutes
-import bagSubPartRoutes
 import com.makassar.auth.JWTConfig
 import com.makassar.plugins.configureCORS
 import com.makassar.storage.DatabaseConfig
@@ -17,13 +16,14 @@ import com.makassar.plugins.configureSecurity
 import com.makassar.plugins.configureSerialization
 import com.makassar.routes.authRoutes
 import com.makassar.utils.MailService
-import com.typesafe.config.ConfigFactory
 import customersRoutes
 
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 
 import ordersRoutes
+import productRoutes
+import productSubPartRoutes
 import usersRoutes
 
 fun main(args: Array<String>) {
@@ -54,8 +54,8 @@ fun Application.module() {
 
     val orderService = OrderService(mongoDatabase)
     val customerService = CustomerService(mongoDatabase)
-    val bagService = BagService(mongoDatabase)
-    val bagItemService = BagPartService(mongoDatabase)
+    val productService = ProductService(mongoDatabase)
+    val productItemService = ProductPartService(mongoDatabase)
 
 
     val userService = UserService(mongoDatabase)
@@ -69,7 +69,7 @@ fun Application.module() {
 
     ordersRoutes(orderService)
     customersRoutes(customerService)
-    bagRoutes(bagService)
-    bagSubPartRoutes(bagItemService)
+    productRoutes(productService)
+    productSubPartRoutes(productItemService)
 
 }

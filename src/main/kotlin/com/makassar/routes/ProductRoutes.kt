@@ -1,5 +1,5 @@
 
-import com.makassar.dto.BagDto
+import com.makassar.dto.ProductDto
 import com.makassar.dto.requests.StringListRequest
 import com.makassar.dto.toEntity
 import com.makassar.utils.FileProcessing
@@ -15,41 +15,41 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 
-fun Application.bagRoutes(
-    bagService : BagService
+fun Application.productRoutes(
+    productService : ProductService
 ) {
 
     val allowedFileTypesString = environment.config.tryGetString("allowedUploadFileTypes") ?: "png,jpg,jpeg"
-    val logger = LoggerFactory.getLogger("BagRoutes")
+    val logger = LoggerFactory.getLogger("productRoutes")
     routing {
         authenticate("access-jwt"){
             route("/api"){
-                post("/{tenantId}/bags"){
+                post("/{tenantId}/products"){
                     try{
                         val userId = call.parameters["tenantId"] ?: return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
-                        val bagPart = call.receive<BagDto>()
-                        if(bagPart.marketingName == null) return@post call.respond(HttpStatusCode.BadRequest,"Bag requires property 'marketingName'")
-                        if(bagPart.userId == null) return@post call.respond(HttpStatusCode.BadRequest,"tenantId was not specified")
+                        val productPart = call.receive<ProductDto>()
+                        if(productPart.marketingName == null) return@post call.respond(HttpStatusCode.BadRequest,"product requires property 'marketingName'")
+                        if(productPart.userId == null) return@post call.respond(HttpStatusCode.BadRequest,"tenantId was not specified")
 
-                        val id = bagService.createOne(userId, bagPart)
-                        call.respond(HttpStatusCode.OK, mapOf("bagId" to id))
+                        val id = productService.createOne(userId, productPart)
+                        call.respond(HttpStatusCode.OK, mapOf("productId" to id))
                     }catch (e: Exception){
                         call.respond(HttpStatusCode.BadRequest,e.toString())
                     }
                 }
 
 
-                post("/{tenantId}/bags/withImages"){
+                post("/{tenantId}/products/withImages"){
                     val userId = call.parameters["tenantId"] ?: return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                     val multipart = call.receiveMultipart()
-                    var bagDto: BagDto? = null
+                    var ProductDto: ProductDto? = null
                     val fileParts = mutableListOf<PartData.FileItem>()
 
                     multipart.forEachPart { part ->
                         when (part) {
                             is PartData.FormItem -> {
                                 if(part.name =="data"){
-                                    bagDto = Json.decodeFromString<BagDto>(part.value)
+                                    ProductDto = Json.decodeFromString<ProductDto>(part.value)
                                 }
                             }
                             is PartData.FileItem -> {
@@ -61,36 +61,36 @@ fun Application.bagRoutes(
                         }
                     }
 
-                    if (bagDto == null) return@post call.respond(HttpStatusCode.BadRequest, "Bag information were not provided")
+                    if (ProductDto == null) return@post call.respond(HttpStatusCode.BadRequest, "product information were not provided")
 
-                    if(bagDto!!.marketingName == null) return@post call.respond(HttpStatusCode.BadRequest, "Bag requires property 'marketingName'")
-
-
-                    //if(bagDto!!.userId == null) return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified")
+                    if(ProductDto!!.marketingName == null) return@post call.respond(HttpStatusCode.BadRequest, "product requires property 'marketingName'")
 
 
-                    val fileUploadResult = FileProcessing.handleFileUploads("$userId/bags",fileParts,allowedFileTypesString)
+                    //if(ProductDto!!.userId == null) return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified")
+
+
+                    val fileUploadResult = FileProcessing.handleFileUploads("$userId/products",fileParts,allowedFileTypesString)
                     val uploadedImagesUrls = fileUploadResult["imageUrls"]?.toList()
 
 
-                    bagDto = bagDto!!.copy(imageUrls =  uploadedImagesUrls, userId = userId)
+                    ProductDto = ProductDto!!.copy(imageUrls =  uploadedImagesUrls, userId = userId)
 
-                    val id = bagService.createOne(userId, bagDto!!)
+                    val id = productService.createOne(userId, ProductDto!!)
 
 
-                    if(fileUploadResult["fileExtensionNotAllowed"]!!.isNotEmpty()) call.respond(HttpStatusCode.Created, mapOf( "bagId" to id, "errors" to "File extensions not allowed : ${fileUploadResult["fileExtensionNotAllowed"]}"))
-                    else call.respond(HttpStatusCode.Created, mapOf("bag" to bagDto!!.toEntity(id)))
+                    if(fileUploadResult["fileExtensionNotAllowed"]!!.isNotEmpty()) call.respond(HttpStatusCode.Created, mapOf( "productId" to id, "errors" to "File extensions not allowed : ${fileUploadResult["fileExtensionNotAllowed"]}"))
+                    else call.respond(HttpStatusCode.Created, mapOf("product" to ProductDto!!.toEntity(id)))
 
                 }
 
-                get("/{tenantId}/bags/{id}") {
+                get("/{tenantId}/products/{id}") {
 
                     try {
                         val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val bag = bagService.getOneById(userId, id)
-                        if (bag != null) {
-                            call.respond(bag)
+                        val product = productService.getOneById(userId, id)
+                        if (product != null) {
+                            call.respond(product)
                         }
                         call.respond(HttpStatusCode.NotFound)
 
@@ -101,41 +101,41 @@ fun Application.bagRoutes(
                     }
                 }
 
-            get("/{tenantId}/bags") {
+            get("/{tenantId}/products") {
                     try {
                         val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
-                        val bag = bagService.getAll(userId)
-                        if (bag.isEmpty()) {
-                            call.respond("No bag found")
+                        val product = productService.getAll(userId)
+                        if (product.isEmpty()) {
+                            call.respond("No product found")
                         }
-                        call.respond(HttpStatusCode.OK, bag)
+                        call.respond(HttpStatusCode.OK, product)
                     } catch (e : Exception){
                         call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
                     }
                 }
 
-                post("/{tenantId}/bags/withIds"){
+                post("/{tenantId}/products/withIds"){
                     try {
                         val userId = call.parameters["tenantId"] ?: return@post call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
-                        val bagIds = call.receive<StringListRequest>()
-                        val bags = bagService.getAllByIds(userId, bagIds.stringList)
-                        if (bags.isEmpty()) {
-                            call.respond("No bag found for those ids")
+                        val productIds = call.receive<StringListRequest>()
+                        val products = productService.getAllByIds(userId, productIds.stringList)
+                        if (products.isEmpty()) {
+                            call.respond("No product found for those ids")
                         }
-                        call.respond(HttpStatusCode.OK, bags)
+                        call.respond(HttpStatusCode.OK, products)
                     } catch (e : Exception){
                         call.respond(HttpStatusCode.InternalServerError, "Internal Server Error : ${e}")
                     }
                 }
 
 
-                put("/{tenantId}/bags/{id}") {
+                put("/{tenantId}/products/{id}") {
                     try {
                         val userId = call.parameters["tenantId"] ?: return@put call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
-                        val bag = call.receive<BagDto>()
-                        bagService.updateOneById(userId, id, bag).let {
-                            val result =  if(it)  "Successfully modified bag with id $id"  else "bag with id $id not found"
+                        val product = call.receive<ProductDto>()
+                        productService.updateOneById(userId, id, product).let {
+                            val result =  if(it)  "Successfully modified product with id $id"  else "product with id $id not found"
                             call.respond(HttpStatusCode.OK,result)
                         }
                     }catch (e : IllegalArgumentException){
@@ -147,19 +147,19 @@ fun Application.bagRoutes(
 
                 }
 
-                delete("/{tenantId}/bags/{id}") {
+                delete("/{tenantId}/products/{id}") {
                     try {
                         val userId = call.parameters["tenantId"] ?: return@delete call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("No ID found")
                         val imageUrls = call.receive<StringListRequest>()
-                        bagService.deleteOneById(userId, id).let {
+                        productService.deleteOneById(userId, id).let {
                             if(it) {
                                 val filesDeleted = deleteUploadedFilesWithNames(imageUrls.stringList.toSet())
-                                if(filesDeleted) call.respond(HttpStatusCode.OK,mapOf("bagId" to id))
-                                else call.respond(HttpStatusCode.OK, mapOf("bagId" to id, "err" to "some images haven't been removed"))
+                                if(filesDeleted) call.respond(HttpStatusCode.OK,mapOf("productId" to id))
+                                else call.respond(HttpStatusCode.OK, mapOf("productId" to id, "err" to "some images haven't been removed"))
                             }
 
-                            else call.respond(HttpStatusCode.OK, "bag with id $id not found")
+                            else call.respond(HttpStatusCode.OK, "product with id $id not found")
 
                         }
                     }catch (e : IllegalArgumentException){

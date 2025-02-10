@@ -1,39 +1,39 @@
 package com.makassar.entities
 
 
-import com.makassar.dto.BagDto
+import com.makassar.dto.ProductDto
 import kotlinx.serialization.Serializable
 import org.bson.codecs.pojo.annotations.BsonId
 import java.util.*
 
 
 /**
- * Represents a Bag product.
+ * Represents a Product product.
  *
- * @property id The unique identifier of the bag.
- * @property marketingName The name of the bag to be showed to customers.
- * @property retailPrice Retail price of the bag.
- * @property sku Reference number of the bag.
- * @property colors The visible colors of the bag for the final users, ordered from principal to the least present color on the item.
+ * @property id The unique identifier of the Product.
+ * @property marketingName The name of the Product to be showed to customers.
+ * @property retailPrice Retail price of the Product.
+ * @property sku Reference number of the Product.
+ * @property colors The visible colors of the Product for the final users, ordered from principal to the least present color on the item.
 
  Links to other items.
 
- * @property handles Map of the BagItem Id that is from the "handles" family, to the quantity of the item.
- * @property bodies Map of the BagItem Id that is from the "bodies" family, to the quantity of the item.
- * @property shoulderStraps Map of the BagItem Id that is from the "shoulderStraps" family, to the quantity of the item.
- * @property figures Map of the BagItem Id that is from the "figures" family, to the quantity of the item.
- * @property liners Map of the BagItem Id that is from the "liners" family, to the quantity of the item.
- * @property screws Map of the BagItem Id that is from the "screws" family, to the quantity of the item.
- * @property others Map of the BagItem Id that is from the "others" family, to the quantity of the item.
+ * @property handles Map of the ProductItem Id that is from the "handles" family, to the quantity of the item.
+ * @property bodies Map of the ProductItem Id that is from the "bodies" family, to the quantity of the item.
+ * @property shoulderStraps Map of the ProductItem Id that is from the "shoulderStraps" family, to the quantity of the item.
+ * @property figures Map of the ProductItem Id that is from the "figures" family, to the quantity of the item.
+ * @property liners Map of the ProductItem Id that is from the "liners" family, to the quantity of the item.
+ * @property screws Map of the ProductItem Id that is from the "screws" family, to the quantity of the item.
+ * @property others Map of the ProductItem Id that is from the "others" family, to the quantity of the item.
 
- * @property materials To hold the full list of materials needed to build the bag (computed at creation of the entity by summing all the materials
- * needed for the BagItems).
- * @property imageUrls Url's of images illustrating the bag.
+ * @property materials To hold the full list of materials needed to build the Product (computed at creation of the entity by summing all the materials
+ * needed for the ProductItems).
+ * @property imageUrls Url's of images illustrating the Product.
  */
 
 
 @Serializable
-data class Bag(
+data class Product(
     @BsonId val id: String = UUID.randomUUID().toString(),
     val userId: String? = null,
     val marketingName: String? = null,
@@ -59,8 +59,8 @@ data class Bag(
 )
 
 
-fun Bag.toDto(): BagDto{
-    return BagDto(
+fun Product.toDto(): ProductDto{
+    return ProductDto(
         marketingName = this.marketingName,
         retailPrice = this.retailPrice,
         wholesalePrice = this.wholesalePrice,

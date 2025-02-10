@@ -2,30 +2,30 @@ version: '3.8'
 
 services:
 
-  makassar_management_react:
-    image: thenatz1999/makassar-management-react-prod:0.0.2
-    container_name: makassar-mgmt-react
-    ports:
-      - "3000:3000"
-    environment: {}
-      #VITE_API_URL: "http://buchinn.be:8080/api"
-    #VITE_API_IMAGES_URL: "http://buchinn.be:8080/uploads"
-
-
-  makassar_management_api:
-    image: thenatz1999/makassar-management-api-prod:0.0.6
-    container_name: makassar-mgmt-api
-    ports:
-      - "8080:8080"
-
-    environment:
-      MONGO_DBNAME: makassar-management-db-dev
-      MONGO_HOST: mongoDB
-      MONGO_USER: mongo-makassar
-      MONGO_PASSWORD: mongo-makassar-password
-
-    depends_on:
-      - mongoDB
+#  makassar_management_react:
+#    image: thenatz1999/makassar-management-react-prod:0.0.2
+#    container_name: makassar-mgmt-react
+#    ports:
+#      - "3000:3000"
+#    environment: {}
+#      #VITE_API_URL: "http://buchinn.be:8080/api"
+#    #VITE_API_IMAGES_URL: "http://buchinn.be:8080/uploads"
+#
+#
+#  makassar_management_api:
+#    image: thenatz1999/makassar-management-api-prod:0.0.6
+#    container_name: makassar-mgmt-api
+#    ports:
+#      - "8080:8080"
+#
+#    environment:
+#      MONGO_DBNAME: makassar-management-db-dev
+#      MONGO_HOST: mongoDB
+#      MONGO_USER: mongo-makassar
+#      MONGO_PASSWORD: mongo-makassar-password
+#
+#    depends_on:
+#      - mongoDB
 
 
 

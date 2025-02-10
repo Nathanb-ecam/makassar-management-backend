@@ -20,7 +20,7 @@ import java.util.UUID
 
 class OrderService(private val database: CoroutineDatabase) : GenericService<OrderDto,Order> {
     private val orderCollection = database.getCollection<Order>()
-    private val bagCollection = database.getCollection<Bag>()
+    private val ProductCollection = database.getCollection<Product>()
     private val customerCollection = database.getCollection<Customer>()
     private val sequenceCollection = database.getCollection<Sequence>()
 
@@ -49,7 +49,7 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
             comments = new.comments,
             status = new.status,
             price =  new.price,
-            bags = new.bags,
+            products = new.products,
             plannedDate = new.plannedDate,
             createdAt = System.currentTimeMillis(),
         )
@@ -63,16 +63,16 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
     }
 
 
-    suspend fun getOrderWithBagsDetailed(userId : String, orderId: String): OrderBagDetailed? {
+    suspend fun getOrderWithProductsDetailed(userId : String, orderId: String): OrderProductDetailed? {
         val order = orderCollection.findOne(and(Order::id eq orderId, Order::userId eq userId)) ?: return null
 
-        val bagIds = order.bags?.keys?.toList() ?: emptyList()
+        val ProductIds = order.products?.keys?.toList() ?: emptyList()
 
-        val bags = bagCollection.find(Bag::id `in` bagIds).toList()
+        val Products = ProductCollection.find(Product::id `in` ProductIds).toList()
 
-        val bagsWithDetails = bags.associateWith { bag -> order.bags?.get(bag.id) ?: "0" }
+        val ProductsWithDetails = Products.associateWith { Product -> order.products?.get(Product.id) ?: "0" }
 
-        val orderWithDetails = order.toBagDetailedOrder(bagsWithDetails)
+        val orderWithDetails = order.toProductDetailedOrder(ProductsWithDetails)
 
         return orderWithDetails
     }
@@ -87,7 +87,7 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
             description = updated.description ?: existingOrder.description,
             price = updated.price ?: existingOrder.price,
             status = updated.status ?: existingOrder.status,
-            bags = updated.bags ?: existingOrder.bags,
+            products = updated.products ?: existingOrder.products,
             plannedDate = updated.plannedDate ?: existingOrder.plannedDate,
             updatedAt = System.currentTimeMillis(),
         )
@@ -111,23 +111,23 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         result.wasAcknowledged()
     }
 
-    suspend fun addBagToOrder(userId: String,orderId: String, bagId: String, quantity: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun addProductToOrder(userId: String,orderId: String, ProductId: String, quantity: String): Boolean = withContext(Dispatchers.IO) {
         val existingOrder = orderCollection.findOne(and(Order::userId eq userId, Order::id eq orderId)) ?: return@withContext false
 
 
-        val updatedBags = existingOrder.bags?.toMutableMap() ?: mutableMapOf()
+        val updatedProducts = existingOrder.products?.toMutableMap() ?: mutableMapOf()
 
-        if (updatedBags.containsKey(bagId)) {
-            val existingQuantity = updatedBags[bagId]
+        if (updatedProducts.containsKey(ProductId)) {
+            val existingQuantity = updatedProducts[ProductId]
             val newQuantity = existingQuantity?.toInt()?.plus(quantity.toInt())
-            updatedBags[bagId] = newQuantity.toString()
+            updatedProducts[ProductId] = newQuantity.toString()
         } else {
-            updatedBags[bagId] = quantity
+            updatedProducts[ProductId] = quantity
         }
 
 
         val updatedOrder = existingOrder.copy(
-            bags = updatedBags,
+            products = updatedProducts,
             updatedAt = System.currentTimeMillis()
         )
 
@@ -186,7 +186,7 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
                 OrderCustomerDetailed::description from "\$description",
                 OrderCustomerDetailed::comments from "\$comments",
                 OrderCustomerDetailed::price from "\$price",
-                OrderCustomerDetailed::bags from "\$bags",
+                OrderCustomerDetailed::products from "\$products",
                 OrderCustomerDetailed::plannedDate from "\$plannedDate",
             )
         ).toList().firstOrNull()
@@ -208,34 +208,34 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
                     OrderCustomerDetailed::comments from "\$comments",
                     OrderCustomerDetailed::status from "\$status",
                     OrderCustomerDetailed::price from "\$price",
-                    OrderCustomerDetailed::bags from "\$bags",
+                    OrderCustomerDetailed::products from "\$products",
                     OrderCustomerDetailed::plannedDate from "\$plannedDate",
                 )
             ).toList().firstOrNull() ?: throw NoSuchElementException("Order with $orderId not found")
 
 
-            val bagIds = orderCustomerDetailed.bags?.keys?.toSet() ?: emptySet()
+            val ProductIds = orderCustomerDetailed.products?.keys?.toSet() ?: emptySet()
 
-            val bags = bagCollection.find(Bag::id `in` bagIds).toList()
-
-
+            val Products = ProductCollection.find(Product::id `in` ProductIds).toList()
 
 
-            val map: Map<String, BagWithQuantity> = bags.associateBy(
+
+
+            val map: Map<String, ProductWithQuantity> = Products.associateBy(
                 { it.id },
-                { bag -> BagWithQuantity(bag, orderCustomerDetailed.bags?.get(bag.id) ?: "0") }
+                { Product -> ProductWithQuantity(Product, orderCustomerDetailed.products?.get(Product.id) ?: "0") }
             )
 
-/*            val bagsWithQuantities = bags.map { bag ->
-                BagWithQuantity(
-                    bag = bag,
-                    quantity = orderCustomerDetailed.bags?.get(bag.id) ?: "0"
+/*            val ProductsWithQuantities = Products.map { Product ->
+                ProductWithQuantity(
+                    Product = Product,
+                    quantity = orderCustomerDetailed.Products?.get(Product.id) ?: "0"
                 )
             }*/
 
 
             val orderWithDetails = orderCustomerDetailed.toFullyDetailed(
-                bags = map,
+                products = map,
             )
             println(orderWithDetails)
             return@withContext orderWithDetails

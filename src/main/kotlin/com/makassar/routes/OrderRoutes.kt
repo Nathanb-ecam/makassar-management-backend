@@ -1,5 +1,4 @@
 
-import com.makassar.dto.BagDto
 import com.makassar.dto.OrderDto
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -50,12 +49,12 @@ fun Application.ordersRoutes(
                     }
                 }
 
-                get("/{tenantId}/orders/{id}/with-bags-detailed") {
+                get("/{tenantId}/orders/{id}/with-products-detailed") {
 
                     try {
                         val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val id = call.parameters["id"] ?: throw IllegalArgumentException("order ID not found")
-                        val order = orderService.getOrderWithBagsDetailed(userId,id)
+                        val order = orderService.getOrderWithProductsDetailed(userId,id)
                         if (order != null) {
                             return@get call.respond(order)
                         }
@@ -170,13 +169,13 @@ fun Application.ordersRoutes(
                 }
 
 
-                get("/{tenantId}/orders/{orderId}/add-bag/{bagId}/{quantity}") {
+                get("/{tenantId}/orders/{orderId}/add-product/{productId}/{quantity}") {
                     try {
                         val userId = call.parameters["tenantId"] ?: return@get call.respond(HttpStatusCode.BadRequest, "tenantId was not specified!")
                         val orderId = call.parameters["orderId"] ?: throw IllegalArgumentException("orderId not found")
-                        val bagId = call.parameters["bagId"] ?: throw IllegalArgumentException("No bagId found")
+                        val productId = call.parameters["productId"] ?: throw IllegalArgumentException("No productId found")
                         val quantity = call.parameters["quantity"] ?: throw IllegalArgumentException("No quantity found")
-                        orderService.addBagToOrder(userId, orderId,bagId,quantity).let {
+                        orderService.addProductToOrder(userId, orderId,productId,quantity).let {
                             val result =  if(it)  "Successfully modified order with id $orderId"  else "Order with id $orderId not found"
                             call.respond(HttpStatusCode.OK,result)
                         }

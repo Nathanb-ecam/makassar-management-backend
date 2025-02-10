@@ -1,8 +1,8 @@
 package com.makassar.dto
 
-import com.makassar.entities.Bag
 import com.makassar.entities.Customer
 import com.makassar.entities.Order
+import com.makassar.entities.Product
 import io.ktor.client.utils.EmptyContent.status
 import kotlinx.serialization.Serializable
 
@@ -16,7 +16,7 @@ open class OrderDto(
     val description: String? = null,
     val comments: String? = null,
     val price : Price? = null,
-    val bags : Map<String,String>? = null, // "bagId" : quantity
+    val products : Map<String,String>? = null, // "productId" : quantity
     /*val plannedDate: PlannedDate? = null,*/
     val plannedDate: String? = null,
 )
@@ -50,7 +50,7 @@ data class OrderFullyDetailed(
     val description: String? = null,
     val comments: String? = null,
     val price : Price? = null,
-    val bags : Map<String,BagWithQuantity>? = null, // "bagId" : quantity
+    val products : Map<String,ProductWithQuantity>? = null, // "bagId" : quantity
     val plannedDate: String? = null,
     val createdLocation: String? = null,
     val createdAt: Long? = null,
@@ -68,15 +68,15 @@ data class OrderCustomerDetailed(
     val status : String? = null,
     val comments: String? = null,
     val price : Price? = null,
-    val bags : Map<String,String>? = null, // "bagId" : quantity
+    val products : Map<String,String>? = null, // "bagId" : quantity
     val plannedDate: String? = null,
     val createdAt: Long? = null,
     val updatedAt: Long? = null,
 )
 
 
-/*fun OrderCustomerDetailed.toFullyDetailed(bags: List<BagWithQuantity>) : OrderFullyDetailed {*/
-fun OrderCustomerDetailed.toFullyDetailed(bags: Map<String,BagWithQuantity>) : OrderFullyDetailed {
+/*fun OrderCustomerDetailed.toFullyDetailed(products: List<ProductWithQuantity>) : OrderFullyDetailed {*/
+fun OrderCustomerDetailed.toFullyDetailed(products: Map<String,ProductWithQuantity>) : OrderFullyDetailed {
     return OrderFullyDetailed(
         id = id,
         customer = customer,
@@ -85,7 +85,7 @@ fun OrderCustomerDetailed.toFullyDetailed(bags: Map<String,BagWithQuantity>) : O
         description = description,
         comments = comments,
         price = price,
-        bags = bags,
+        products = products,
         plannedDate = plannedDate,
         createdLocation = createdLocation,
         createdAt = createdAt,
@@ -94,14 +94,14 @@ fun OrderCustomerDetailed.toFullyDetailed(bags: Map<String,BagWithQuantity>) : O
     )
 }
 
-data class OrderBagDetailed(
+data class OrderProductDetailed(
     val userId: String? = null,
     val customerId: String? = null,
     val orderNumber: String? = null,
 
     val status :  String? = null,
     val price : Price? = null,
-    val bags : Map<Bag,String>? = null,
+    val products : Map<Product,String>? = null,
     /*val plannedDate: PlannedDate? = null,*/
     val plannedDate: String? = null,
 
