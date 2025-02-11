@@ -36,9 +36,23 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         return updatedSequence?.sequenceValue ?: 1
     }
 
+    suspend fun getNextOrderForUserWithId(userId : String): Long {
+
+        val updatedSequence = sequenceCollection.findOneAndUpdate(
+            Filters.and(
+                Filters.eq("_id", "order"),
+                Filters.eq("userId",userId)
+            ),
+            Updates.inc("sequenceValue", 1),
+            FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER).upsert(true)
+        )
+        return updatedSequence?.sequenceValue ?: 1
+    }
+
     override suspend fun createOne(userId: String, new: OrderDto): String = withContext(Dispatchers.IO) {
 
-        val currentOrderNumber = getNextOrder()
+        //val currentOrderNumber = getNextOrder()
+        val currentOrderNumber = getNextOrderForUserWithId(userId)
         val order = Order(
             id = UUID.randomUUID().toString(),
             userId = userId,
@@ -66,13 +80,13 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
     suspend fun getOrderWithProductsDetailed(userId : String, orderId: String): OrderProductDetailed? {
         val order = orderCollection.findOne(and(Order::id eq orderId, Order::userId eq userId)) ?: return null
 
-        val ProductIds = order.products?.keys?.toList() ?: emptyList()
+        val productIds = order.products?.keys?.toList() ?: emptyList()
 
-        val Products = ProductCollection.find(Product::id `in` ProductIds).toList()
+        val products = ProductCollection.find(Product::id `in` productIds).toList()
 
-        val ProductsWithDetails = Products.associateWith { Product -> order.products?.get(Product.id) ?: "0" }
+        val productsWithDetails = products.associateWith { product -> order.products?.get(product.id) ?: "0" }
 
-        val orderWithDetails = order.toProductDetailedOrder(ProductsWithDetails)
+        val orderWithDetails = order.toProductDetailedOrder(productsWithDetails)
 
         return orderWithDetails
     }
@@ -201,15 +215,16 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
                 lookup(from = "customer", localField = "customerId", foreignField = "_id", newAs = "customer"),
                 unwind("\$customer"),
                 project(
-                    OrderCustomerDetailed::id from "\$_id",
-                    OrderCustomerDetailed::customer from "\$customer",
-                    OrderCustomerDetailed::createdLocation from "\$createdLocation",
-                    OrderCustomerDetailed::description from "\$description",
-                    OrderCustomerDetailed::comments from "\$comments",
-                    OrderCustomerDetailed::status from "\$status",
-                    OrderCustomerDetailed::price from "\$price",
-                    OrderCustomerDetailed::products from "\$products",
-                    OrderCustomerDetailed::plannedDate from "\$plannedDate",
+                    OrderFullyDetailed::id from "\$_id",
+                    OrderFullyDetailed::orderNumber from "\$orderNumber",
+                    OrderFullyDetailed::customer from "\$customer",
+                    OrderFullyDetailed::createdLocation from "\$createdLocation",
+                    OrderFullyDetailed::description from "\$description",
+                    OrderFullyDetailed::comments from "\$comments",
+                    OrderFullyDetailed::status from "\$status",
+                    OrderFullyDetailed::price from "\$price",
+                    OrderFullyDetailed::products from "\$products",
+                    OrderFullyDetailed::plannedDate from "\$plannedDate",
                 )
             ).toList().firstOrNull() ?: throw NoSuchElementException("Order with $orderId not found")
 

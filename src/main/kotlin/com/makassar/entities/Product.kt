@@ -41,18 +41,7 @@ data class Product(
     val wholesalePrice: String? = null,
     val sku : String? = null,
     val colors: List<String>? = null,
-
-    val handles: Map<String,String>? = null,
-    val bodies: Map<String,String>? = null,
-    val shoulderStraps: Map<String,String>? = null,
-    val figures: Map<String,String>? = null,
-    val liners: Map<String,String>? = null,
-    val screws: Map<String,String>? = null,
-    val others: Map<String,String>? = null,
-
-    val materials : Map<String,String>? = null, // "productId" : “quantity needed of that productMaterial"
     val imageUrls :  List<String>? = null,
-
     val description: String? = null,
     val createdAt: Long? = null,
     val updatedAt: Long? = null,
@@ -66,14 +55,6 @@ fun Product.toDto(): ProductDto{
         wholesalePrice = this.wholesalePrice,
         sku = this.sku,
         colors = this.colors,
-        handles = this.handles,
-        bodies = this.bodies,
-        shoulderStraps = this.shoulderStraps,
-        figures = this.figures,
-        liners = this.liners,
-        screws = this.screws,
-        others = this.others,
-        materials = this.materials,
         imageUrls = this.imageUrls,
         description = this.description
     )
