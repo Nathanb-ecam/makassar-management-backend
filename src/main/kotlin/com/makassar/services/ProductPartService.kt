@@ -73,7 +73,7 @@ class ProductPartService(private val database: CoroutineDatabase) : GenericServi
 
 
     override suspend fun deleteOneById(userId: String, id: String): Boolean = withContext(Dispatchers.IO) {
-        val result = productPartsCollection.deleteOneById(and(ProductPart::userId eq userId, ProductPart::id eq id))
+        val result = productPartsCollection.deleteOne(and(ProductPart::userId eq userId, ProductPart::id eq id))
         result.wasAcknowledged()
     }
 

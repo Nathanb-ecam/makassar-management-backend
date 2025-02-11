@@ -39,10 +39,8 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
     suspend fun getNextOrderForUserWithId(userId : String): Long {
 
         val updatedSequence = sequenceCollection.findOneAndUpdate(
-            Filters.and(
-                Filters.eq("_id", "order"),
-                Filters.eq("userId",userId)
-            ),
+
+            Filters.eq("_id", "order_$userId"),
             Updates.inc("sequenceValue", 1),
             FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER).upsert(true)
         )
@@ -91,8 +89,8 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
         return orderWithDetails
     }
 
-    override suspend fun updateOneById(userId : String, orderId: String, updated: OrderDto): Boolean = withContext(Dispatchers.IO) {
-        val existingOrder = orderCollection.findOne(and(Order::id eq orderId, Order::userId eq userId)) ?: return@withContext false
+    override suspend fun updateOneById(userId : String, id: String, updated: OrderDto): Boolean = withContext(Dispatchers.IO) {
+        val existingOrder = orderCollection.findOne(and(Order::id eq id, Order::userId eq userId)) ?: return@withContext false
 
         val updatedOrder = existingOrder.copy(
             customerId = updated.customerId ?: existingOrder.customerId,
@@ -106,7 +104,7 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
             updatedAt = System.currentTimeMillis(),
         )
         val result = orderCollection.replaceOne(
-            and(Order::id eq orderId, Order::userId eq userId),
+            and(Order::id eq id, Order::userId eq userId),
             updatedOrder
         )
         result.wasAcknowledged()
@@ -114,29 +112,31 @@ class OrderService(private val database: CoroutineDatabase) : GenericService<Ord
 
     }
 
-    override suspend fun getOneById(userId : String, orderId: String): Order? = withContext(Dispatchers.IO) {
-        val order = orderCollection.findOne(and(Order::id eq orderId, Order::userId eq userId))
+    override suspend fun getOneById(userId : String, id: String): Order? = withContext(Dispatchers.IO) {
+        val order = orderCollection.findOne(and(Order::id eq id, Order::userId eq userId))
         order
     }
 
 
-    override suspend fun deleteOneById(userId : String, orderId: String): Boolean = withContext(Dispatchers.IO) {
-        val result = orderCollection.deleteOneById(and(Order::userId eq userId,Order::id eq orderId))
+    override suspend fun deleteOneById(userId : String, id: String): Boolean = withContext(Dispatchers.IO) {
+        val result = orderCollection.deleteOne(
+            and(Order::userId eq userId,Order::id eq id)
+        )
         result.wasAcknowledged()
     }
 
-    suspend fun addProductToOrder(userId: String,orderId: String, ProductId: String, quantity: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun addProductToOrder(userId: String,orderId: String, productId: String, quantity: String): Boolean = withContext(Dispatchers.IO) {
         val existingOrder = orderCollection.findOne(and(Order::userId eq userId, Order::id eq orderId)) ?: return@withContext false
 
 
         val updatedProducts = existingOrder.products?.toMutableMap() ?: mutableMapOf()
 
-        if (updatedProducts.containsKey(ProductId)) {
-            val existingQuantity = updatedProducts[ProductId]
+        if (updatedProducts.containsKey(productId)) {
+            val existingQuantity = updatedProducts[productId]
             val newQuantity = existingQuantity?.toInt()?.plus(quantity.toInt())
-            updatedProducts[ProductId] = newQuantity.toString()
+            updatedProducts[productId] = newQuantity.toString()
         } else {
-            updatedProducts[ProductId] = quantity
+            updatedProducts[productId] = quantity
         }
 
 
