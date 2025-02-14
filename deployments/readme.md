@@ -1,5 +1,7 @@
 # Backend application
 
+
+## Setup the properties
 application.yaml template 
 ```yaml
 ktor:
@@ -38,4 +40,13 @@ ktor:
       refreshToken:
         lifetime: "$JWT_REFRESH_LIFETIME:3600000"
 
+```
+
+
+## Building the docker image
+
+1. Build locally using ```./gradlew build ```
+2. Use the dockerfile to copy the project jar into the container : 
+```bash
+docker buildx build --progress=plain --platform=linux/amd64 -f deployments/Dockerfile --push -t thenatz1999/makassar-management-api .
 ```

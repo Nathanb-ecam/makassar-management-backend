@@ -2,29 +2,28 @@ version: '3.8'
 
 services:
 
-
   makassar_management_react:
-    image: thenatz1999/makassar-management-react-prod:0.0.5
+    image: thenatz1999/makassar-management-react-prod:0.0.8
     container_name: makassar-mgmt-react
+    pull_policy: always
+    restart: always
     ports:
       - "3000:3000"
     environment: {}
-      #VITE_API_URL: "http://buchinn.be:8080/api"
-      #VITE_API_IMAGES_URL: "http://buchinn.be:8080/uploads"
-
 
   makassar_management_api:
-    image: thenatz1999/makassar-management-api-prod:0.0.7
+    image: thenatz1999/makassar-management-api-prod:0.0.8
     container_name: makassar-mgmt-api
+    restart: always
     ports:
       - "8080:8080"
     volumes:
-      - ./api-prod-uploads:/app/uploads
-
-    environment: {}
-      #MONGO_DBNAME: makassar-management-db-dev
-      #MONGO_HOST: localhost
-
+      - /makassar-management/data/api-prod-uploads:/app/uploads
+    environment:
+      MONGO_USER: ""
+      MONGO_PASSWORD: ""
+      MONGO_DBNAME: ""
+      MONGO_HOST: "mongoDB"
     depends_on:
       - mongoDB
 
@@ -32,14 +31,22 @@ services:
 
 
   mongoDB:
-      image: mongo:latest
-      container_name: mongodb
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: mongo-makassar-mgmt-user
-        MONGO_INITDB_ROOT_PASSWORD: mongo-makassar-mgmt-password
-        MONGO_INITDB_DATABASE: makassar-management-db-prod
-      ports:
-        - "27017:27017"
-      volumes:
-        - ./mongo-prod-data:/data/db
-
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ""
+      MONGO_INITDB_ROOT_PASSWORD: ""
+      MONGO_INITDB_DATABASE: ""
+    ports:
+      - "27017:27017"
+    #        - "27018:27018"  # SSL Port
+    volumes:
+      - /makassar-management/data/mongo-prod-data:/data/db
+#        - /makassar-management/mongo-config/mongod.conf:/etc/mongod.conf.orig
+#        - /makassar-management/mongo-config/mongo-certs:/etc/ssl/mongo  # Mount SSL certificates
+#      command: >
+#        mongod
+#        --tlsMode preferTLS
+#        --tlsCertificateKeyFile /etc/ssl/mongo/mongo.pem
+#        --tlsCAFile /etc/ssl/mongo/ca.pem
